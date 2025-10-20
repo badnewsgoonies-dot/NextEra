@@ -4,7 +4,7 @@
  */
 
 import * as v from 'valibot';
-import { Ok, Err, type Result } from '../util/Result.js';
+import { Ok, Err, type Result } from '../utils/Result.js';
 
 /**
  * Validate data against a schema, returning Result

@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
-import { makeRng } from '../../src/util/Rng.js';
-import type { IRng } from '../../src/util/Rng.js';
+import { makeRng } from '../../src/utils/rng.js';
+import type { IRng } from '../../src/utils/rng.js';
 
 const seq = (r: IRng, n = 6): number[] => Array.from({ length: n }, () => r.int(0, 1e9));
 

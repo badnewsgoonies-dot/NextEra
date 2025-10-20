@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
-import { RngStreams } from '../../src/util/RngStreams.js';
-import { makeRng } from '../../src/util/Rng.js';
+import { RngStreams } from '../../src/utils/rngStreams.js';
+import { makeRng } from '../../src/utils/rng.js';
 
 describe('RngStreams', () => {
   it('creates independent streams', () => {

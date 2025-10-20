@@ -17,7 +17,7 @@
  *   const damage = battleRng.int(10, 20);
  */
 
-import type { IRng } from './Rng.js';
+import type { IRng } from './rng.js';
 
 type KnownStream =
   | 'route'
