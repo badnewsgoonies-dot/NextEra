@@ -107,11 +107,14 @@ npm run dev
 
 ## 📚 Documentation
 
+**Essential Docs:**
 - `QUICKSTART.md` - 5-minute setup guide
-- `ARCHITECTURE_DECISIONS.md` - All 5 blockers resolved
-- `LEGACY_ANALYSIS.md` - Code migration analysis
-- `PROGRESS.md` - Live development progress
-- `SESSION_SUMMARY.md` - Session overview
+- `ARCHITECTURE_DECISIONS.md` - Core architectural decisions
+- `CURRENT_STATE_ASSESSMENT.md` - Latest project status
+- `QA_CHECKLIST.md` - Quality verification
+
+**Historical Docs:**
+- `docs/` - Archived development history, legacy analysis, and planning
 
 ---
 
