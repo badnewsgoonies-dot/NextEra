@@ -1,76 +1,121 @@
 /*
  * App: Main application component
  * 
- * Demo of full game loop:
- * - OpponentSelectScreen: Choose from 3 opponents
- * - BattleScreen: Watch auto-battle with animations
- * - Full integration with GameController
+ * Full game loop with all screens:
+ * - Menu → StarterSelect → OpponentSelect → Battle → Rewards → Recruit → (loop)
+ * - Settings screen accessible from menu
+ * - Full integration with GameController, RewardSystem, TeamManager
  */
 
 import React, { useState, useEffect } from 'react';
 import { ConsoleLogger } from './systems/Logger.js';
 import { GameController } from './core/GameController.js';
+import { RewardSystem } from './systems/RewardSystem.js';
+import { TeamManager } from './systems/TeamManager.js';
+import { SettingsManager } from './systems/SettingsManager.js';
+import { MainMenuScreen } from './screens/MainMenuScreen.js';
+import { StarterSelectScreen } from './screens/StarterSelectScreen.js';
 import { OpponentSelectScreen } from './screens/OpponentSelectScreen.js';
 import { BattleScreen } from './screens/BattleScreen.js';
 import { RewardsScreen } from './screens/RewardsScreen.js';
 import { RecruitScreen } from './screens/RecruitScreen.js';
-import type { OpponentPreview, BattleResult, BattleUnit, BattleReward } from './types/game.js';
-import { mockPlayerTeam } from '../tests/fixtures/battleFixtures.js';
+import { SettingsScreen } from './screens/SettingsScreen.js';
+import type { OpponentPreview, BattleResult, BattleUnit, BattleReward, PlayerUnit } from './types/game.js';
 
-type AppScreen = 'loading' | 'opponent_select' | 'battle' | 'rewards' | 'recruit' | 'defeat';
+type AppScreen = 
+  | 'menu'
+  | 'starter_select'
+  | 'opponent_select'
+  | 'battle'
+  | 'rewards'
+  | 'recruit'
+  | 'defeat'
+  | 'settings';
 
 export function App(): React.ReactElement {
-  const [controller] = useState(() => new GameController(new ConsoleLogger('info')));
-  const [screen, setScreen] = useState<AppScreen>('loading');
+  const [logger] = useState(() => new ConsoleLogger('info'));
+  const [controller] = useState(() => new GameController(logger));
+  const [rewardSystem] = useState(() => new RewardSystem(logger));
+  const [teamManager] = useState(() => new TeamManager());
+  const [settingsManager] = useState(() => new SettingsManager());
+  
+  const [screen, setScreen] = useState<AppScreen>('menu');
+  const [playerTeam, setPlayerTeam] = useState<PlayerUnit[]>([]);
   const [previews, setPreviews] = useState<readonly OpponentPreview[]>([]);
   const [battleResult, setBattleResult] = useState<BattleResult | null>(null);
+  const [rewards, setRewards] = useState<BattleReward | null>(null);
   const [playerUnits, setPlayerUnits] = useState<BattleUnit[]>([]);
   const [enemyUnits, setEnemyUnits] = useState<BattleUnit[]>([]);
 
-  // Initialize game on mount
-  useEffect(() => {
-    const initResult = controller.startRun(mockPlayerTeam, Date.now());
+  // Check for existing saves
+  const hasSaves = false; // TODO: Implement save detection
+
+  // Menu handlers
+  const handleNewGame = () => {
+    setScreen('starter_select');
+  };
+
+  const handleContinue = () => {
+    // TODO: Load last save
+    console.log('Continue not implemented');
+  };
+
+  const handleLoadGame = () => {
+    // TODO: Show save slots
+    console.log('Load game not implemented');
+  };
+
+  const handleOpenSettings = () => {
+    setScreen('settings');
+  };
+
+  const handleExit = () => {
+    console.log('Exit game');
+    // In production, this would close the window or return to launcher
+  };
+
+  // Starter selection
+  const handleStarterSelected = (starters: PlayerUnit[]) => {
+    setPlayerTeam(starters);
     
+    const initResult = controller.startRun(starters, Date.now());
     if (initResult.ok) {
       const choicesResult = controller.generateOpponentChoices();
-      
       if (choicesResult.ok) {
         setPreviews(choicesResult.value);
         setScreen('opponent_select');
       }
     }
-  }, [controller]);
+  };
 
+  const handleStarterCancel = () => {
+    setScreen('menu');
+  };
+
+  // Opponent selection
   const handleSelectOpponent = (opponentId: string) => {
-    // Select opponent
     const selectResult = controller.selectOpponent(opponentId);
     if (!selectResult.ok) {
       console.error('Failed to select opponent:', selectResult.error);
       return;
     }
 
-    // Start battle
     const startResult = controller.startBattle();
     if (!startResult.ok) {
       console.error('Failed to start battle:', startResult.error);
       return;
     }
 
-    // Execute battle
     const battleResult = controller.executeBattle();
     if (!battleResult.ok) {
       console.error('Failed to execute battle:', battleResult.error);
       return;
     }
 
-    // Initialize battle units for animation
     const selectedPreview = previews.find(p => p.spec.id === opponentId);
-    
     if (selectedPreview) {
-      // Get current player team
-      const currentTeam = controller.getState().playerTeam;
+      const currentTeam = playerTeam;
       
-      // Create BattleUnits from player team
       const playerBattleUnits: BattleUnit[] = currentTeam.map((unit, index) => ({
         id: unit.id,
         name: unit.name,
@@ -85,7 +130,6 @@ export function App(): React.ReactElement {
         originalIndex: index,
       }));
 
-      // Create BattleUnits from enemy templates
       const enemyBattleUnits: BattleUnit[] = selectedPreview.spec.units.map((template, index) => ({
         id: template.id,
         name: template.name,
@@ -103,53 +147,66 @@ export function App(): React.ReactElement {
       setPlayerUnits(playerBattleUnits);
       setEnemyUnits(enemyBattleUnits);
       setBattleResult(battleResult.value);
+      
+      // Generate rewards
+      const generatedRewards = rewardSystem.generateRewards(
+        selectedPreview.spec,
+        battleResult.value,
+        controller.getState().runSeed // Use run seed for rewards
+      );
+      setRewards(generatedRewards);
+      
       setScreen('battle');
     }
   };
 
+  // Battle handlers
   const handleBattleComplete = () => {
     if (!battleResult) return;
 
     if (battleResult.winner === 'player') {
-      // Go to rewards screen
       setScreen('rewards');
     } else if (battleResult.winner === 'enemy') {
       setScreen('defeat');
     } else {
-      // Draw - restart
-      setScreen('loading');
-      setTimeout(() => {
-        const initResult = controller.startRun(mockPlayerTeam, Date.now());
-        if (initResult.ok) {
-          const choicesResult = controller.generateOpponentChoices();
-          if (choicesResult.ok) {
-            setPreviews(choicesResult.value);
-            setScreen('opponent_select');
-          }
-        }
-      }, 2000);
+      // Draw - back to menu
+      setScreen('menu');
     }
   };
 
+  // Rewards handlers
   const handleRewardsContinue = () => {
     setScreen('recruit');
   };
 
+  // Recruit handlers
   const handleRecruit = (enemyId: string, replaceUnitId?: string) => {
-    console.log('Recruited:', enemyId, replaceUnitId ? `(replaced ${replaceUnitId})` : '');
-    
-    // TODO: Actually add enemy to team and remove replaced unit
-    // For now, just advance to next battle
-    
-    const choicesResult = controller.generateOpponentChoices();
-    if (choicesResult.ok) {
-      setPreviews(choicesResult.value);
-      setScreen('opponent_select');
+    if (!rewards) return;
+
+    const enemyTemplate = rewards.defeatedEnemies.find(e => e.id === enemyId);
+    if (!enemyTemplate) {
+      console.error('Enemy not found:', enemyId);
+      return;
+    }
+
+    const recruitResult = teamManager.recruitUnit(playerTeam, enemyTemplate, replaceUnitId);
+    if (recruitResult.ok) {
+      setPlayerTeam(recruitResult.value as PlayerUnit[]);
+      controller.advanceToNextBattle();
+      
+      const choicesResult = controller.generateOpponentChoices();
+      if (choicesResult.ok) {
+        setPreviews(choicesResult.value);
+        setScreen('opponent_select');
+      }
+    } else {
+      console.error('Recruitment failed:', recruitResult.error);
     }
   };
 
   const handleSkipRecruit = () => {
-    // Skip recruitment, go to next battle
+    controller.advanceToNextBattle();
+    
     const choicesResult = controller.generateOpponentChoices();
     if (choicesResult.ok) {
       setPreviews(choicesResult.value);
@@ -157,115 +214,122 @@ export function App(): React.ReactElement {
     }
   };
 
-  // Loading screen
-  if (screen === 'loading') {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            NextEra MVP
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Initializing game...
-          </p>
+  // Defeat handlers
+  const handleDefeatRestart = () => {
+    setScreen('menu');
+  };
+
+  // Settings handlers
+  const handleSettingsBack = () => {
+    setScreen('menu');
+  };
+
+  // Render appropriate screen
+  switch (screen) {
+    case 'menu':
+      return (
+        <MainMenuScreen
+          onNewGame={handleNewGame}
+          onContinue={handleContinue}
+          onLoadGame={handleLoadGame}
+          onSettings={handleOpenSettings}
+          onExit={handleExit}
+          hasSaves={hasSaves}
+        />
+      );
+
+    case 'starter_select':
+      return (
+        <StarterSelectScreen
+          onSelect={handleStarterSelected}
+          onCancel={handleStarterCancel}
+        />
+      );
+
+    case 'opponent_select':
+      return (
+        <OpponentSelectScreen
+          previews={previews}
+          battleIndex={controller.getState().battleIndex}
+          onSelect={handleSelectOpponent}
+          onCancel={() => setScreen('menu')}
+        />
+      );
+
+    case 'battle':
+      if (!battleResult || playerUnits.length === 0 || enemyUnits.length === 0) {
+        return <div>Loading battle...</div>;
+      }
+      return (
+        <BattleScreen
+          result={battleResult}
+          playerUnits={playerUnits}
+          enemyUnits={enemyUnits}
+          onComplete={handleBattleComplete}
+        />
+      );
+
+    case 'rewards':
+      if (!rewards) {
+        return <div>Loading rewards...</div>;
+      }
+      return (
+        <RewardsScreen
+          rewards={rewards}
+          onContinue={handleRewardsContinue}
+        />
+      );
+
+    case 'recruit':
+      if (!rewards) {
+        return <div>Loading recruitment...</div>;
+      }
+      return (
+        <RecruitScreen
+          defeatedEnemies={rewards.defeatedEnemies}
+          currentTeam={playerTeam}
+          onRecruit={handleRecruit}
+          onSkip={handleSkipRecruit}
+        />
+      );
+
+    case 'defeat':
+      return (
+        <div className="min-h-screen bg-gradient-to-b from-red-800 to-red-900 flex items-center justify-center">
+          <div className="text-center max-w-md bg-white dark:bg-gray-800 rounded-lg p-8 shadow-2xl">
+            <div className="text-7xl mb-4">💀</div>
+            <h1 className="text-5xl font-bold text-red-500 mb-4">Defeat</h1>
+            <p className="text-xl text-gray-700 dark:text-gray-300 mb-2">
+              Your party was defeated...
+            </p>
+            {battleResult && (
+              <p className="text-lg text-gray-600 dark:text-gray-400 mb-6">
+                Survived {battleResult.turnsTaken} turns
+              </p>
+            )}
+            <button
+              onClick={handleDefeatRestart}
+              className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors shadow-lg"
+            >
+              Return to Menu
+            </button>
+          </div>
         </div>
-      </div>
-    );
-  }
+      );
 
-  // Opponent selection screen
-  if (screen === 'opponent_select' && previews.length > 0) {
-    return (
-      <OpponentSelectScreen
-        previews={previews}
-        battleIndex={controller.getState().battleIndex}
-        onSelect={handleSelectOpponent}
-        onCancel={() => console.log('Cancelled')}
-      />
-    );
-  }
+    case 'settings':
+      return (
+        <SettingsScreen
+          onBack={handleSettingsBack}
+          settingsManager={settingsManager}
+        />
+      );
 
-  // Battle screen
-  if (screen === 'battle' && battleResult && playerUnits.length > 0 && enemyUnits.length > 0) {
-    return (
-      <BattleScreen
-        result={battleResult}
-        playerUnits={playerUnits}
-        enemyUnits={enemyUnits}
-        onComplete={handleBattleComplete}
-      />
-    );
-  }
-
-  // Rewards screen
-  if (screen === 'rewards' && battleResult) {
-    // Create mock rewards (TODO: implement RewardSystem)
-    const mockRewards: BattleReward = {
-      items: [],
-      defeatedEnemies: previews.find(p => p.spec.id === controller.getState().selectedOpponentId)?.spec.units || [],
-      experience: battleResult.turnsTaken * 10,
-    };
-
-    return (
-      <RewardsScreen
-        rewards={mockRewards}
-        onContinue={handleRewardsContinue}
-      />
-    );
-  }
-
-  // Recruit screen
-  if (screen === 'recruit') {
-    const defeatedEnemies = previews.find(p => p.spec.id === controller.getState().selectedOpponentId)?.spec.units || [];
-    
-    return (
-      <RecruitScreen
-        defeatedEnemies={defeatedEnemies}
-        currentTeam={controller.getState().playerTeam}
-        onRecruit={handleRecruit}
-        onSkip={handleSkipRecruit}
-      />
-    );
-  }
-
-  // Defeat screen
-  if (screen === 'defeat') {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-red-800 to-red-900 flex items-center justify-center">
-        <div className="text-center max-w-md bg-white dark:bg-gray-800 rounded-lg p-8">
-          <h1 className="text-4xl font-bold text-red-500 mb-4">
-            Defeat
-          </h1>
-          <p className="text-gray-700 dark:text-gray-300 mb-4">
-            Your party was defeated...
-          </p>
-          <button
-            onClick={() => {
-              // Restart
-              setScreen('loading');
-              setTimeout(() => {
-                const initResult = controller.startRun(mockPlayerTeam, Date.now());
-                if (initResult.ok) {
-                  const choicesResult = controller.generateOpponentChoices();
-                  if (choicesResult.ok) {
-                    setPreviews(choicesResult.value);
-                    setScreen('opponent_select');
-                  }
-                }
-              }, 1000);
-            }}
-            className="mt-4 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
-            Try Again
-          </button>
+    default:
+      return (
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
-      </div>
-    );
+      );
   }
-
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-      <p className="text-gray-600 dark:text-gray-400">Loading...</p>
-    </div>
-  );
 }
