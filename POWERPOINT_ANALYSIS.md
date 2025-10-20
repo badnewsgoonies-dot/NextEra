@@ -9,11 +9,14 @@
 ## Mockup Slides Overview
 
 ### Slide 1: Title Screen
+
 **Content:** "NextRealDeal UI Mockups - Tactical RPG – Golden Sun Inspired"  
 **Status:** Title/branding slide
 
 ### Slide 2: Main Menu
+
 **Elements:**
+
 - New Game
 - Load Game
 - Settings
@@ -22,13 +25,16 @@
 **Status:** ⏸️ Not implemented (simple, ~1 hour)
 
 ### Slide 3: Choose Your Opponent
+
 **Elements:**
+
 - 3 opponent cards
 - Each shows: Threat, Difficulty, Tags
 - Horizontal card layout
 
 **Status:** ✅ **ALREADY IMPLEMENTED!**  
 **Our Implementation:** `OpponentSelectScreen.tsx`
+
 - ✅ 3 deterministic opponent cards
 - ✅ Difficulty dots (instead of text)
 - ✅ Tag badges
@@ -37,7 +43,9 @@
 - ✅ Better than mockup (expandable cards, unit details, special rules)
 
 ### Slide 4: Battle Screen
+
 **Elements:**
+
 - Left side: Player party (Isaac, Garet, Ivan, Mia)
 - Right side: Enemy party
 - HP/MP bars for each unit
@@ -49,7 +57,9 @@
 **Adaptation:** Show battle as animated sequence using BattleResult.actions
 
 ### Slide 5: Rewards & Recruit
+
 **Elements:**
+
 - Rewards section (+100 Gold, Potion, Power Scroll)
 - Recruit section (2 defeated enemies shown with stats)
 - Recruit buttons
@@ -64,6 +74,7 @@
 ### ✅ What We Have (Better Than Mockup!)
 
 **Opponent Selection:**
+
 | Mockup | Our Implementation | Winner |
 |--------|-------------------|--------|
 | Static 3 cards | Dynamic 3 cards | ✅ Ours (deterministic) |
@@ -73,6 +84,7 @@
 | Static design | Expandable cards | ✅ Ours (more detail) |
 
 **Game Engine:**
+
 | Mockup Implies | Our Implementation | Status |
 |----------------|-------------------|--------|
 | Battle system | ✅ BattleSystem (headless, deterministic) | ✅ Complete |
@@ -83,12 +95,14 @@
 ### ⏸️ What Mockup Has That We Don't
 
 **Missing Screens:**
+
 1. Main Menu - Simple (1 hour)
 2. Battle Screen - Complex (3-4 hours)
 3. Rewards Screen - Moderate (2 hours)
 4. Recruit Screen - Moderate (2 hours)
 
 **Missing Features:**
+
 1. MP system (mockup shows MP bars) - Not in MVP spec
 2. Spells/Items (mockup action menu) - Not in MVP spec (auto-battle)
 3. Defend action - Not in MVP spec
@@ -98,8 +112,10 @@
 
 ## Sprite Assets Available
 
-### ✅ From psynergy.zip (19 GIFs):
+### ✅ From psynergy.zip (19 GIFs)
+
 **Attack Animations:**
+
 - Fire: Dragon_Fire, Fiery_Blast, Inferno, Pyroclasm
 - Water: Deluge, Froth_Spiral, Glacier
 - Ice: Freeze_Prism, Ice_Missile
@@ -111,16 +127,18 @@
 **Location:** `public/sprites/psynergy/`  
 **Usage:** Battle screen attack effects
 
-### ❌ Missing Sprites:
+### ❌ Missing Sprites
+
 - Character battle sprites (Isaac, Garet, Ivan, Mia)
 - Enemy sprites (Bandits, Beasts, etc.)
 - HP/MP bar graphics
 - Menu cursor/selector
 - Item icons (Potion, Scroll, etc.)
 
-### Options for Missing Sprites:
+### Options for Missing Sprites
 
 **Option A: Placeholder Graphics**
+
 - CSS-based HP bars (Tailwind)
 - Colored div blocks for characters
 - Unicode symbols for items
@@ -128,12 +146,14 @@
 - **Quality:** Functional but basic
 
 **Option B: Find Golden Sun Sprites**
+
 - Search spriters-resource.com
 - Extract from Golden Sun ROMs
 - **Time:** 2-3 hours searching/extracting
 - **Quality:** Authentic
 
 **Option C: Commission/Create Sprites**
+
 - Hire pixel artist
 - Create original sprites
 - **Time:** Days/weeks
@@ -148,6 +168,7 @@
 ### Phase 1: Core Screens (MVP)
 
 **1. Main Menu Screen** (1 hour)
+
 ```typescript
 // src/screens/MainMenuScreen.tsx
 - Vertical menu with keyboard nav
@@ -157,6 +178,7 @@
 ```
 
 **2. Battle Screen** (3 hours)
+
 ```typescript
 // src/screens/BattleScreen.tsx
 - Display player team (4 units) vs enemy team
@@ -168,6 +190,7 @@
 ```
 
 **3. Rewards Screen** (1 hour)
+
 ```typescript
 // src/screens/RewardsScreen.tsx
 - List items gained
@@ -176,6 +199,7 @@
 ```
 
 **4. Recruit Screen** (2 hours)
+
 ```typescript
 // src/screens/RecruitScreen.tsx
 - Show defeated enemies (from BattleResult.unitsDefeated)
@@ -189,17 +213,20 @@
 ### Phase 2: Polish (Optional)
 
 **5. Starter Selection** (2 hours)
+
 - Choose initial 4 units
 - Team preview
 - Start button
 
 **6. Animation Polish** (2-3 hours)
+
 - Smooth HP bar animations
 - Damage number popups
 - Victory fanfare
 - Defeat screen with stats
 
 **7. Sound Effects** (1-2 hours)
+
 - Menu navigation sounds
 - Attack sounds
 - Victory/defeat music
@@ -229,18 +256,21 @@
 
 ## Adaptation Strategy
 
-### Mockup Slide 4 (Battle) Needs Adaptation:
+### Mockup Slide 4 (Battle) Needs Adaptation
 
 **Mockup Shows:**
+
 - Interactive action menu (Attack/Spells/Items/Defend)
 - Turn-based player input
 
 **Our Implementation:**
+
 - Auto-battle (no player input)
 - Visualize BattleResult.actions as animation sequence
 - Show actions happening automatically
 
 **Suggested Adaptation:**
+
 ```typescript
 // BattleScreen shows combat as automatic sequence
 // Each CombatAction from BattleResult plays as animation:
@@ -259,12 +289,14 @@ actions.forEach((action, index) => {
 ```
 
 **Pros of Auto-Battle:**
+
 - Simpler implementation
 - Faster battles
 - Deterministic (matches our engine)
 - Good for mobile (no complex input)
 
 **Cons:**
+
 - Less player agency
 - Can't use items/spells mid-battle
 
@@ -275,9 +307,11 @@ actions.forEach((action, index) => {
 ## Recommended Next Steps
 
 ### Option A: Build Battle Screen (Recommended)
+
 **Time:** 3-4 hours  
 **Impact:** Makes game fully playable  
 **Features:**
+
 - Visualize battle using BattleResult.actions
 - Animate attacks with psynergy GIFs
 - HP bars with animations
@@ -285,18 +319,22 @@ actions.forEach((action, index) => {
 - Victory/defeat screens
 
 ### Option B: Build All Missing Screens
+
 **Time:** 7-10 hours  
 **Impact:** Complete UI per mockups  
 **Includes:**
+
 - Main Menu
 - Battle Screen
 - Rewards Screen
 - Recruit Screen
 
 ### Option C: Polish Current UI
+
 **Time:** 2-3 hours  
 **Impact:** Better visuals  
 **Features:**
+
 - Improve OpponentSelectScreen styling
 - Add animations
 - Better typography
@@ -307,17 +345,20 @@ actions.forEach((action, index) => {
 ## Assets Status
 
 ✅ **Available Now:**
+
 - 19 psynergy attack animations (GIF)
 - Tailwind CSS for UI components
 - React for interactive UI
 
 ⏸️ **Need to Source:**
+
 - Character sprites (Isaac, Garet, Ivan, Mia)
 - Enemy sprites (Bandits, Beasts, Skeletons, etc.)
 - UI icons (potions, scrolls, gold)
 - HP/MP bar graphics (can use CSS as fallback)
 
 ❌ **Not Needed for MVP:**
+
 - Spell icons (auto-battle)
 - Item icons (not in MVP)
 - World map graphics (not in MVP)
@@ -327,6 +368,7 @@ actions.forEach((action, index) => {
 ## Quick Win: Implement Battle Screen
 
 I can build a functional battle screen in 3-4 hours using:
+
 - **Character sprites:** CSS colored blocks (placeholder)
 - **Attack animations:** Psynergy GIFs (we have these!)
 - **HP bars:** CSS progress bars (Tailwind)

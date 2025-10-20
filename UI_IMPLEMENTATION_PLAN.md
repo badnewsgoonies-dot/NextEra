@@ -9,6 +9,7 @@
 ## UI Mockups from PowerPoint
 
 ### Slide 2: Main Menu
+
 ```
 ┌─────────────────────┐
 │   NextRealDeal      │
@@ -21,6 +22,7 @@
 ```
 
 ### Slide 3: Choose Your Opponent (ALREADY IMPLEMENTED ✅)
+
 ```
 ┌──────────────────────────────────────────────────────┐
 │  Choose Your Opponent                                 │
@@ -32,9 +34,11 @@
 │  Fliers          Poison           Bandits            │
 └──────────────────────────────────────────────────────┘
 ```
+
 **Status:** ✅ Already have OpponentSelectScreen with better design!
 
 ### Slide 4: Battle Screen
+
 ```
 ┌──────────────────────────────────────────┐
 │  ┌──────────┐  ┌──────────┐             │
@@ -58,6 +62,7 @@
 ```
 
 ### Slide 5: Rewards & Recruit
+
 ```
 ┌──────────────────────────────────────────┐
 │  Rewards & Recruit                        │
@@ -94,11 +99,13 @@ mkdir -p public/sprites/{ui,characters,abilities}
 ```
 
 **Sprites Available:**
+
 - Psynergy animations (attack effects): Blue_Bolt, Dragon_Fire, Inferno, etc.
 - Unleashes (special attacks): Titan_Blade, Mortal_Danger
 - Summons (large attacks): Ragnarok
 
 **Missing (need to source or create):**
+
 - Character battle sprites (Isaac, Garet, Ivan, Mia)
 - Enemy sprites (Bandits, Beasts, etc.)
 - UI icons (HP/MP bars, menu cursors)
@@ -108,12 +115,14 @@ mkdir -p public/sprites/{ui,characters,abilities}
 **File:** `src/screens/MainMenuScreen.tsx`
 
 **Features:**
+
 - Vertical menu (New Game, Load Game, Settings, Exit)
 - Keyboard navigation (Up/Down, Enter)
 - Arrow cursor animation
 - Background image (optional)
 
 **Component:**
+
 ```typescript
 export function MainMenuScreen({
   onNewGame,
@@ -132,18 +141,21 @@ export function MainMenuScreen({
 **File:** `src/screens/BattleScreen.tsx`
 
 **Layout (Golden Sun style):**
+
 - Left column: Player party (4 units max)
 - Right column: Enemy party (1-4 units)
 - Bottom: Active unit panel + action menu
 - Center: Battle animation area
 
 **Components Needed:**
+
 1. **UnitBattleCard** - Shows unit sprite, HP/MP bars, status
 2. **ActionMenu** - Attack/Spells/Items/Defend
 3. **BattleAnimationLayer** - Displays attack animations
 4. **TurnOrderIndicator** - Shows who's next
 
 **Battle Flow:**
+
 ```typescript
 // Use BattleResult.actions to animate
 actions.forEach((action, i) => {
@@ -159,6 +171,7 @@ actions.forEach((action, i) => {
 ```
 
 **Features:**
+
 - Auto-battle visualization (no player input during combat)
 - Damage numbers pop up on hit
 - HP bars animate down
@@ -170,12 +183,14 @@ actions.forEach((action, i) => {
 **File:** `src/screens/RewardsScreen.tsx`
 
 **Features:**
+
 - Display items gained (from BattleReward)
 - Gold amount (if implemented)
 - Experience points (if implemented)
 - Continue button → Recruit screen
 
 **Component:**
+
 ```typescript
 export function RewardsScreen({
   rewards: BattleReward,
@@ -192,6 +207,7 @@ export function RewardsScreen({
 **File:** `src/screens/RecruitScreen.tsx`
 
 **Features:**
+
 - Show defeated enemies (from BattleResult.unitsDefeated)
 - Display unit stats (HP, ATK, Role, Tags)
 - Recruit button on each
@@ -199,6 +215,7 @@ export function RewardsScreen({
 - Skip button (don't recruit)
 
 **Logic:**
+
 ```typescript
 export function RecruitScreen({
   defeatedEnemies: EnemyUnitTemplate[],
@@ -227,12 +244,14 @@ export function RecruitScreen({
 **File:** `src/screens/StarterSelectionScreen.tsx`
 
 **Features:**
+
 - Grid of available starter units
 - Select 4 units (checkboxes)
 - Preview selected team
 - Start button (disabled until 4 selected)
 
 **Layout:**
+
 ```
 ┌────────────────────────────────────┐
 │  Choose Your Starting Team (4)     │
@@ -253,15 +272,17 @@ export function RecruitScreen({
 
 ## Sprite Integration Strategy
 
-### Available Sprites (psynergy.zip):
+### Available Sprites (psynergy.zip)
+
 - ✅ Psynergy animations (attack effects)
 - ❌ Character battle sprites (need to source)
 - ❌ Enemy sprites (need to source)
 - ❌ UI elements (HP bars, cursors)
 
-### Options:
+### Options
 
 **Option A: Use Placeholder Sprites**
+
 - Colored squares for units (red = player, blue = enemy)
 - Animated borders for attacks
 - Simple HP bars with Tailwind
@@ -269,12 +290,14 @@ export function RecruitScreen({
 - **Cons:** Less polished
 
 **Option B: Find/Create Character Sprites**
+
 - Search for Golden Sun sprite sheets online
 - Use psynergy animations for attacks only
 - **Pros:** More authentic to mockup
 - **Cons:** Requires asset hunting
 
 **Option C: Hybrid Approach** (Recommended)
+
 - Placeholder character sprites initially
 - Use psynergy GIFs for attack animations
 - Polish with real sprites later
@@ -316,7 +339,7 @@ public/
 
 ## Implementation Priority
 
-### Recommended Order:
+### Recommended Order
 
 1. **Main Menu** (1 hour) - Entry point
 2. **Battle Screen** (3-4 hours) - Core visualization
@@ -332,6 +355,7 @@ public/
 ## Quick Start Implementation
 
 ### Option 1: Minimal Viable UI (4-6 hours)
+
 - Main Menu (basic)
 - Battle Screen (placeholder sprites, show actions)
 - Rewards Screen (list items)
@@ -339,6 +363,7 @@ public/
 - **Result:** Playable end-to-end
 
 ### Option 2: Polished UI (12-14 hours)
+
 - All screens with animations
 - Psynergy GIF effects
 - HP bar animations
@@ -347,6 +372,7 @@ public/
 - **Result:** Production-quality presentation
 
 ### Option 3: Incremental (Recommended)
+
 - Start with Option 1 (get it playable)
 - Add polish incrementally
 - Test with real users
@@ -359,21 +385,25 @@ public/
 **I can help you:**
 
 **A) Implement Main Menu Screen** (1 hour)
+
 - Wire to GameController
 - Navigation working
 - Save/load integration
 
 **B) Implement Battle Screen** (3-4 hours)
+
 - Visualize BattleResult.actions
 - Animate combat sequence
 - Use psynergy GIFs for attacks
 
 **C) Complete All Screens** (12-14 hours)
+
 - Full UI as per mockups
 - End-to-end playable
 - Sprite integration
 
 **D) Find/Prepare Sprites First**
+
 - Source character sprites
 - Organize sprite assets
 - Then implement screens
@@ -381,4 +411,3 @@ public/
 **Which approach would you prefer?**
 
 Meanwhile, I have the psynergy animations ready to use for attack effects! 🎮
-
