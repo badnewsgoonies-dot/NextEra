@@ -78,7 +78,7 @@ export function useBattleAnimation(
     setCurrentIndex(actions.length - 1);
     setIsComplete(true);
     setIsPlaying(false);
-    onComplete();
+    setTimeout(onComplete, 500); // Consistent 500ms delay like natural completion
   }, [actions.length, onComplete]);
 
   return {

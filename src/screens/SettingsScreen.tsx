@@ -22,9 +22,13 @@ export function SettingsScreen({
 }: SettingsScreenProps): React.ReactElement {
   const [settings, setSettings] = useState<Settings>(settingsManager.getSettings());
 
-  // Save settings whenever they change
+  // Save settings with debounce (avoid excessive localStorage writes)
   useEffect(() => {
-    settingsManager.updateSettings(settings);
+    const timeoutId = setTimeout(() => {
+      settingsManager.updateSettings(settings);
+    }, 300); // Wait 300ms after last change
+    
+    return () => clearTimeout(timeoutId);
   }, [settings, settingsManager]);
 
   const handleVolumeChange = (

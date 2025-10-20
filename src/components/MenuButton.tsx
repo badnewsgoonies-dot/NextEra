@@ -57,6 +57,7 @@ export const MenuButton = React.memo(function MenuButton({
 
   return (
     <button
+      type="button"
       role="menuitem"
       aria-label={label}
       aria-disabled={disabled}

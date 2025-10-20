@@ -11,7 +11,7 @@
  * - Accessibility (ARIA, screen reader)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MenuButton } from '../components/MenuButton.js';
 
 export interface MainMenuScreenProps {
@@ -33,14 +33,14 @@ export function MainMenuScreen({
 }: MainMenuScreenProps): React.ReactElement {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  // Menu items configuration
-  const menuItems = [
+  // Menu items configuration (memoized to avoid recreation on every render)
+  const menuItems = useMemo(() => [
     { label: 'New Game', action: onNewGame, disabled: false },
     { label: 'Continue', action: onContinue, disabled: !hasSaves },
     { label: 'Load Game', action: onLoadGame, disabled: false },
     { label: 'Settings', action: onSettings, disabled: false },
     { label: 'Exit', action: onExit, disabled: false },
-  ];
+  ], [onNewGame, onContinue, onLoadGame, onSettings, onExit, hasSaves]);
 
   // Find first enabled item
   const firstEnabledIndex = menuItems.findIndex(item => !item.disabled);

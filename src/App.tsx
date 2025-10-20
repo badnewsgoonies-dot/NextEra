@@ -278,7 +278,10 @@ export function App(): React.ReactElement {
           previews={previews}
           battleIndex={controller.getState().battleIndex}
           onSelect={handleSelectOpponent}
-          onCancel={() => setScreen('menu')}
+          onCancel={() => {
+            // Return to menu (note: could add controller.abortRun() if needed)
+            setScreen('menu');
+          }}
         />
       );
 

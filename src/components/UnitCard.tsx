@@ -84,7 +84,8 @@ export const UnitCard = React.memo(function UnitCard({
     <div
       role="checkbox"
       aria-checked={selected}
-      aria-label={`${unit.name}, ${unit.role}, ${unit.tags.join(', ')}, HP: ${unit.hp}, ATK: ${unit.atk}, DEF: ${unit.def}, SPD: ${unit.speed}`}
+      aria-labelledby={`unit-${unit.id}-title`}
+      aria-describedby={`unit-${unit.id}-desc`}
       aria-disabled={disabled}
       tabIndex={tabIndex}
       onFocus={onFocus}
@@ -100,7 +101,7 @@ export const UnitCard = React.memo(function UnitCard({
     >
       {/* Header: Name + Role */}
       <div className="flex items-start justify-between mb-3">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+        <h3 id={`unit-${unit.id}-title`} className="text-lg font-bold text-gray-900 dark:text-white">
           {unit.name}
         </h3>
         <span className={`text-sm font-semibold ${getRoleColor(unit.role)}`}>
@@ -153,6 +154,14 @@ export const UnitCard = React.memo(function UnitCard({
           ✓ Selected
         </div>
       )}
+
+      {/* Screen reader description */}
+      <span id={`unit-${unit.id}-desc`} className="sr-only">
+        {unit.role}. Tags: {unit.tags.join(', ')}. 
+        HP {unit.hp}, ATK {unit.atk}, DEF {unit.def}, SPD {unit.speed}.
+        {selected ? ' Selected.' : ''}
+        {disabled ? ' Cannot select - team full.' : ''}
+      </span>
     </div>
   );
 });
