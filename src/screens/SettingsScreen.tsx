@@ -25,7 +25,11 @@ export function SettingsScreen({
   // Save settings with debounce (avoid excessive localStorage writes)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      settingsManager.updateSettings(settings);
+      const res = settingsManager.updateSettings(settings);
+      if (!res.ok) {
+        console.error('Settings save failed:', res.error);
+        // TODO: Show user-facing error toast/message
+      }
     }, 300); // Wait 300ms after last change
     
     return () => clearTimeout(timeoutId);

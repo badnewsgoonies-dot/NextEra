@@ -47,10 +47,10 @@ export function MainMenuScreen({
 
   // Initialize with first enabled item
   useEffect(() => {
-    if (menuItems[selectedIndex].disabled) {
+    if (selectedIndex >= 0 && selectedIndex < menuItems.length && menuItems[selectedIndex].disabled) {
       setSelectedIndex(firstEnabledIndex);
     }
-  }, [selectedIndex, firstEnabledIndex]);
+  }, [selectedIndex, firstEnabledIndex, menuItems.length]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -83,7 +83,9 @@ export function MainMenuScreen({
         case 'Enter':
         case ' ':
           e.preventDefault();
-          menuItems[selectedIndex].action();
+          if (selectedIndex >= 0 && selectedIndex < menuItems.length) {
+            menuItems[selectedIndex].action();
+          }
           break;
 
         case 'Escape':

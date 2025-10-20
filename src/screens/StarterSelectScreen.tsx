@@ -119,6 +119,15 @@ export function StarterSelectScreen({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [focusedIndex, canStart, onCancel, gridCols]);
 
+  // Move DOM focus when focusedIndex changes (for screen readers)
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    const items = el.querySelectorAll('[role="checkbox"]');
+    const target = items[focusedIndex] as HTMLElement | undefined;
+    target?.focus();
+  }, [focusedIndex]);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
       {/* Header */}
