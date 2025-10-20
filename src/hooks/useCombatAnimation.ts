@@ -17,8 +17,6 @@ import { useState, useCallback, useRef } from 'react';
 export interface CombatAnimationState {
   attackingUnitId: string | null;
   targetedUnitId: string | null;
-  showPsynergy: boolean;
-  psynergyPosition: { x: number; y: number } | null;
   showDamage: boolean;
   damageValue: number | null;
   damagePosition: { x: number; y: number } | null;
@@ -28,8 +26,6 @@ export function useCombatAnimation() {
   const [state, setState] = useState<CombatAnimationState>({
     attackingUnitId: null,
     targetedUnitId: null,
-    showPsynergy: false,
-    psynergyPosition: null,
     showDamage: false,
     damageValue: null,
     damagePosition: null,
@@ -47,8 +43,6 @@ export function useCombatAnimation() {
     setState({
       attackingUnitId: null,
       targetedUnitId: null,
-      showPsynergy: false,
-      psynergyPosition: null,
       showDamage: false,
       damageValue: null,
       damagePosition: null,
@@ -70,16 +64,7 @@ export function useCombatAnimation() {
     // Phase 1: Start attack animation
     setState(prev => ({ ...prev, attackingUnitId: attackerId }));
 
-    // Phase 2: Show psynergy effect (overlaps with attack2)
-    timeoutRefs.current.push(setTimeout(() => {
-      setState(prev => ({
-        ...prev,
-        showPsynergy: true,
-        psynergyPosition: targetPosition,
-      }));
-    }, 300)); // Start psynergy during attack2
-
-    // Phase 3: Target hit + damage number
+    // Phase 2: Target hit + damage number (simplified - no psynergy)
     timeoutRefs.current.push(setTimeout(() => {
       setState(prev => ({
         ...prev,
@@ -87,27 +72,26 @@ export function useCombatAnimation() {
         showDamage: true,
         damageValue: damage,
         damagePosition: targetPosition,
-        showPsynergy: false, // Hide psynergy
       }));
-    }, 600)); // Hit reaction
+    }, 400)); // Hit reaction
 
-    // Phase 4: Clear attack animation
+    // Phase 3: Clear attack animation
     timeoutRefs.current.push(setTimeout(() => {
       setState(prev => ({
         ...prev,
         attackingUnitId: null,
       }));
-    }, 800)); // Attacker returns to idle
+    }, 600)); // Attacker returns to idle
 
-    // Phase 5: Clear hit animation
+    // Phase 4: Clear hit animation
     timeoutRefs.current.push(setTimeout(() => {
       setState(prev => ({
         ...prev,
         targetedUnitId: null,
       }));
-    }, 900)); // Target returns to idle
+    }, 700)); // Target returns to idle
 
-    // Phase 6: Complete (damage number fades on its own)
+    // Phase 5: Complete (damage number fades on its own)
     timeoutRefs.current.push(setTimeout(() => {
       setState(prev => ({
         ...prev,
@@ -116,7 +100,7 @@ export function useCombatAnimation() {
         damagePosition: null,
       }));
       onComplete();
-    }, 1200)); // Total sequence time
+    }, 1000)); // Total sequence time (faster without psynergy)
 
   }, [clearTimeouts]);
 

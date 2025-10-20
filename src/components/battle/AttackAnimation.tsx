@@ -1,21 +1,23 @@
 /*
- * AttackAnimation: Display psynergy attack effects
+ * AttackAnimation: Display attack visual effect
  * 
  * Features:
- * - Role-based psynergy GIF selection
+ * - Simple flash/pulse effect on target
  * - Position overlay on target
  * - Auto-cleanup after animation
+ * 
+ * Note: Psynergy GIFs removed - using CSS effects for now
  */
 
 import React, { useState, useEffect } from 'react';
 import type { Role } from '../../types/game.js';
 
-// Map roles to psynergy animations
-const PSYNERGY_ANIMATIONS: Record<Role, string> = {
-  Tank: '/sprites/psynergy/Grand_Gaia.gif',
-  DPS: '/sprites/psynergy/Dragon_Fire.gif',
-  Support: '/sprites/psynergy/Deluge.gif',
-  Specialist: '/sprites/psynergy/Spark_Plasma.gif',
+// Role-based colors for attack effects
+const ATTACK_COLORS: Record<Role, string> = {
+  Tank: '#16a34a',    // Green
+  DPS: '#ef4444',     // Red
+  Support: '#3b82f6', // Blue
+  Specialist: '#f59e0b', // Amber
 };
 
 export interface AttackAnimationProps {
@@ -44,20 +46,37 @@ export function AttackAnimation({
 
   if (!visible) return <></>;
 
+  const color = ATTACK_COLORS[attackerRole];
+
   return (
     <div
       className="absolute inset-0 pointer-events-none z-50"
       role="presentation"
       aria-hidden="true"
     >
-      <img
-        src={PSYNERGY_ANIMATIONS[attackerRole]}
-        alt="Attack effect"
-        className="w-32 h-32 absolute animate-pulse"
+      {/* Simple colored flash effect - no GIFs */}
+      <div
+        className="absolute rounded-full animate-ping opacity-75"
         style={{
           left: `${targetPosition.x}px`,
           top: `${targetPosition.y}px`,
           transform: 'translate(-50%, -50%)',
+          width: '100px',
+          height: '100px',
+          backgroundColor: color,
+          boxShadow: `0 0 40px ${color}, 0 0 80px ${color}`,
+        }}
+      />
+      <div
+        className="absolute rounded-full animate-pulse"
+        style={{
+          left: `${targetPosition.x}px`,
+          top: `${targetPosition.y}px`,
+          transform: 'translate(-50%, -50%)',
+          width: '60px',
+          height: '60px',
+          backgroundColor: color,
+          boxShadow: `0 0 20px #fff`,
         }}
       />
     </div>
