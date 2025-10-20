@@ -13,6 +13,7 @@ import { ok, err, type Result } from '../utils/Result.js';
 
 export class TeamManager {
   private readonly maxTeamSize = 4;
+  private recruitCounter = 0; // Counter for deterministic ID generation
 
   /**
    * Add unit to team or require replacement
@@ -47,10 +48,12 @@ export class TeamManager {
 
   /**
    * Convert enemy unit template to player unit
+   * Uses counter for deterministic ID generation
    */
   private convertEnemyToPlayer(enemyTemplate: EnemyUnitTemplate): PlayerUnit {
+    this.recruitCounter++;
     return {
-      id: `recruited_${enemyTemplate.id}_${Date.now()}`,
+      id: `recruited_${enemyTemplate.id}_${this.recruitCounter}`,
       name: enemyTemplate.name,
       role: enemyTemplate.role,
       tags: enemyTemplate.tags,

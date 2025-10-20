@@ -7,7 +7,7 @@
  * - Full integration with GameController, RewardSystem, TeamManager
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ConsoleLogger } from './systems/Logger.js';
 import { GameController } from './core/GameController.js';
 import { RewardSystem } from './systems/RewardSystem.js';
@@ -20,6 +20,7 @@ import { BattleScreen } from './screens/BattleScreen.js';
 import { RewardsScreen } from './screens/RewardsScreen.js';
 import { RecruitScreen } from './screens/RecruitScreen.js';
 import { SettingsScreen } from './screens/SettingsScreen.js';
+import { makeRng } from './utils/rng.js';
 import type { OpponentPreview, BattleResult, BattleUnit, BattleReward, PlayerUnit } from './types/game.js';
 
 type AppScreen = 
@@ -148,11 +149,12 @@ export function App(): React.ReactElement {
       setEnemyUnits(enemyBattleUnits);
       setBattleResult(battleResult.value);
       
-      // Generate rewards
+      // Generate rewards (create IRng from run seed)
+      const rewardRng = makeRng(controller.getState().runSeed).fork('rewards').fork(String(controller.getState().battleIndex));
       const generatedRewards = rewardSystem.generateRewards(
         selectedPreview.spec,
         battleResult.value,
-        controller.getState().runSeed // Use run seed for rewards
+        rewardRng
       );
       setRewards(generatedRewards);
       
@@ -176,6 +178,12 @@ export function App(): React.ReactElement {
 
   // Rewards handlers
   const handleRewardsContinue = () => {
+    // Transition FSM from rewards → recruit
+    const transition = controller.getStateMachine().transitionTo('recruit');
+    if (!transition.ok) {
+      console.error('Failed to transition to recruit state:', transition.error);
+      return;
+    }
     setScreen('recruit');
   };
 
@@ -192,7 +200,13 @@ export function App(): React.ReactElement {
     const recruitResult = teamManager.recruitUnit(playerTeam, enemyTemplate, replaceUnitId);
     if (recruitResult.ok) {
       setPlayerTeam(recruitResult.value as PlayerUnit[]);
-      controller.advanceToNextBattle();
+      
+      // Advance to next battle (transitions FSM to opponent_select)
+      const advanceResult = controller.advanceToNextBattle();
+      if (!advanceResult.ok) {
+        console.error('Failed to advance to next battle:', advanceResult.error);
+        return;
+      }
       
       const choicesResult = controller.generateOpponentChoices();
       if (choicesResult.ok) {
@@ -205,7 +219,12 @@ export function App(): React.ReactElement {
   };
 
   const handleSkipRecruit = () => {
-    controller.advanceToNextBattle();
+    // Advance to next battle (transitions FSM to opponent_select)
+    const advanceResult = controller.advanceToNextBattle();
+    if (!advanceResult.ok) {
+      console.error('Failed to advance to next battle:', advanceResult.error);
+      return;
+    }
     
     const choicesResult = controller.generateOpponentChoices();
     if (choicesResult.ok) {

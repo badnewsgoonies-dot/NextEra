@@ -124,7 +124,7 @@ export class RewardSystem {
   /**
    * Calculate gold reward (future feature)
    */
-  calculateGold(opponentSpec: OpponentSpec, battleResult: BattleResult): number {
+  calculateGold(opponentSpec: OpponentSpec): number {
     const baseGold = 50;
     const multiplier = opponentSpec.difficulty === 'Hard' ? 3
                      : opponentSpec.difficulty === 'Normal' ? 2
