@@ -96,8 +96,8 @@ export const OpponentCard = React.memo(function OpponentCard({
     <div
       role="radio"
       aria-checked={selected}
-      aria-expanded={expanded}
-      aria-label={`${spec.name}, ${spec.difficulty} difficulty, ${spec.primaryTag} type, ${spec.units.length} units`}
+      aria-label={`${spec.name}, ${spec.difficulty} difficulty, ${spec.primaryTag} type, ${spec.units.length} units${expanded ? ', expanded' : ''}`}
+      aria-describedby={expanded ? `${spec.id}-details` : undefined}
       tabIndex={tabIndex}
       onFocus={onFocus}
       onKeyDown={handleKeyDown}
@@ -111,9 +111,9 @@ export const OpponentCard = React.memo(function OpponentCard({
     >
       {/* Header: Name + Difficulty */}
       <div className="flex items-start justify-between mb-3">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+        <div className="text-lg font-bold text-gray-900 dark:text-white">
           {spec.name}
-        </h3>
+        </div>
         <DifficultyDots difficulty={spec.difficulty} />
       </div>
 
@@ -136,9 +136,9 @@ export const OpponentCard = React.memo(function OpponentCard({
       {/* Unit Summaries */}
       {unitSummaries && (
         <div className="mb-3">
-          <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
+          <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
             Units ({unitSummaries.length}):
-          </h4>
+          </div>
           <ul className="space-y-1" role="list">
             {unitSummaries.slice(0, expanded ? undefined : 2).map((unit, idx) => (
               <li 
@@ -163,9 +163,9 @@ export const OpponentCard = React.memo(function OpponentCard({
       {/* Special Rule (expanded view) */}
       {expanded && spec.specialRule && (
         <div className="mb-3 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded">
-          <h4 className="text-xs font-semibold text-amber-800 dark:text-amber-300 mb-1">
+          <div className="text-xs font-semibold text-amber-800 dark:text-amber-300 mb-1">
             Special Rule:
-          </h4>
+          </div>
           <p className="text-sm text-amber-900 dark:text-amber-200">
             {spec.specialRule}
           </p>

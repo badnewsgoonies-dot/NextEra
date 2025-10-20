@@ -244,7 +244,7 @@ describe('OpponentCard', () => {
       expect(card).toHaveAttribute('aria-checked', 'true');
     });
 
-    test('aria-expanded reflects expanded state', () => {
+    test('aria-label includes expanded state', () => {
       const { container, rerender } = render(
         <OpponentCard
           preview={mockPreview}
@@ -259,7 +259,8 @@ describe('OpponentCard', () => {
       );
 
       let card = container.querySelector('[role="radio"]');
-      expect(card).toHaveAttribute('aria-expanded', 'false');
+      let label = card?.getAttribute('aria-label') || '';
+      expect(label).not.toContain('expanded');
 
       rerender(
         <OpponentCard
@@ -275,7 +276,8 @@ describe('OpponentCard', () => {
       );
 
       card = container.querySelector('[role="radio"]');
-      expect(card).toHaveAttribute('aria-expanded', 'true');
+      label = card?.getAttribute('aria-label') || '';
+      expect(label).toContain('expanded');
     });
 
     test('tabIndex respects roving tabindex pattern', () => {
