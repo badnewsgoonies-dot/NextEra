@@ -51,22 +51,28 @@ export function OpponentSelectScreen({
 
   // Navigate left (previous card)
   const navigateLeft = useCallback(() => {
+    if (previews.length === 0) return;
     const newIndex = focusedIndex > 0 ? focusedIndex - 1 : previews.length - 1;
     setFocusedIndex(newIndex);
     setExpandedIndex(null); // Collapse when navigating
     
     const preview = previews[newIndex];
-    announce(`${preview.spec.name}, ${preview.spec.difficulty} difficulty`);
+    if (preview) {
+      announce(`${preview.spec.name}, ${preview.spec.difficulty} difficulty`);
+    }
   }, [focusedIndex, previews, announce]);
 
   // Navigate right (next card)
   const navigateRight = useCallback(() => {
+    if (previews.length === 0) return;
     const newIndex = focusedIndex < previews.length - 1 ? focusedIndex + 1 : 0;
     setFocusedIndex(newIndex);
     setExpandedIndex(null); // Collapse when navigating
     
     const preview = previews[newIndex];
-    announce(`${preview.spec.name}, ${preview.spec.difficulty} difficulty`);
+    if (preview) {
+      announce(`${preview.spec.name}, ${preview.spec.difficulty} difficulty`);
+    }
   }, [focusedIndex, previews, announce]);
 
   // Toggle expand focused card
@@ -77,15 +83,23 @@ export function OpponentSelectScreen({
 
   // Select focused card
   const selectFocused = useCallback(() => {
+    if (focusedIndex < 0 || focusedIndex >= previews.length) return;
+    const preview = previews[focusedIndex];
+    if (!preview) return;
+    
     setSelectedIndex(focusedIndex);
-    announce(`${previews[focusedIndex].spec.name} selected. Press Enter again to confirm.`);
+    announce(`${preview.spec.name} selected. Press Enter again to confirm.`);
   }, [focusedIndex, previews, announce]);
 
   // Confirm selection
   const confirmSelection = useCallback(() => {
     if (selectedIndex !== null) {
-      const selectedId = previews[selectedIndex].spec.id;
-      announce(`Confirmed ${previews[selectedIndex].spec.name}`);
+      if (selectedIndex < 0 || selectedIndex >= previews.length) return;
+      const preview = previews[selectedIndex];
+      if (!preview) return;
+      
+      const selectedId = preview.spec.id;
+      announce(`Confirmed ${preview.spec.name}`);
       onSelect(selectedId);
     } else {
       // First press selects, need second press to confirm
@@ -104,6 +118,14 @@ export function OpponentSelectScreen({
     onSpace: confirmSelection,
     onEscape: onCancel,
   });
+
+  // Move DOM focus when keyboard navigation changes (for screen readers)
+  useEffect(() => {
+    const cardElement = cardRefs.current[focusedIndex];
+    if (cardElement) {
+      cardElement.focus();
+    }
+  }, [focusedIndex]);
 
   // Announce on mount
   useEffect(() => {
