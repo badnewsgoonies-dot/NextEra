@@ -1,265 +1,437 @@
 /*
- * BattleScreen: Auto-battle visualization
- * 
- * Displays combat sequence from BattleResult.actions
- * - Player team on left (4 units max)
- * - Enemy team on right (1-4 units)
- * - Animates attacks using psynergy GIFs
- * - Shows damage numbers
- * - Updates HP bars in real-time
- * - Victory/defeat screen at end
+ * BattleScreen (manual): Player-controlled JRPG battle
+ *
+ * Controls:
+ *  - Arrow Up/Down: navigate action menu
+ *  - Enter/Space: select action / confirm target
+ *  - Arrow Left/Right (in targeting): change target
+ *  - Escape: cancel targeting, or Flee from the menu
+ *
+ * Produces a BattleResult compatible with RewardSystem:
+ *  - winner: 'player' | 'enemy' | 'draw' (flee = draw)
+ *  - actions: CombatAction[]
+ *  - unitsDefeated: string[] (enemy unit IDs)
+ *  - turnsTaken: number
  */
 
-import React, { useState, useEffect } from 'react';
-import type { BattleResult, BattleUnit } from '../types/game.js';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import type { BattleUnit, BattleResult, CombatAction } from '../types/game.js';
+import { useKeyboard } from '../hooks/useKeyboard.js';
 import { UnitBattleCard } from '../components/battle/UnitBattleCard.js';
-import { DamageNumber } from '../components/battle/DamageNumber.js';
+import { AttackAnimation } from '../components/battle/AttackAnimation.js';
+import { ActionMenu } from '../components/battle/ActionMenu.js';
+import { PlayerStatusPanel } from '../components/battle/PlayerStatusPanel.js';
+import { EnemyUnit } from '../components/battle/EnemyUnit.js';
+import { TurnBanner } from '../components/battle/TurnBanner.js';
+import { TargetHelp } from '../components/battle/TargetHelp.js';
+import { makeRng } from '../utils/rng.js';
 
-export interface BattleScreenProps {
-  result: BattleResult;
-  playerUnits: readonly BattleUnit[];
-  enemyUnits: readonly BattleUnit[];
-  onComplete: () => void;
+export interface ManualBattleScreenProps {
+  playerUnits: BattleUnit[];
+  enemyUnits: BattleUnit[];
+  onComplete: (result: BattleResult) => void;
 }
 
-interface DamagePopup {
-  id: string;
-  damage: number;
-  x: number;
-  y: number;
-}
+type Phase = 'menu' | 'targeting' | 'animating' | 'resolving';
+
+const ACTIONS = ['Attack', 'Defend', 'Flee'] as const;
 
 export function BattleScreen({
-  result,
-  playerUnits: initialPlayerUnits,
-  enemyUnits: initialEnemyUnits,
+  playerUnits,
+  enemyUnits,
   onComplete,
-}: BattleScreenProps): React.ReactElement {
-  // Clone units to track HP changes during animation
-  const [playerUnits, setPlayerUnits] = useState(() => 
-    initialPlayerUnits.map(u => ({ ...u }))
+}: ManualBattleScreenProps): React.ReactElement {
+  // Mutable battle state (cloned)
+  const [players, setPlayers] = useState<BattleUnit[]>(
+    playerUnits.map(u => ({ ...u, currentHp: Math.max(0, u.currentHp) }))
   );
-  const [enemyUnits, setEnemyUnits] = useState(() => 
-    initialEnemyUnits.map(u => ({ ...u }))
+  const [enemies, setEnemies] = useState<BattleUnit[]>(
+    enemyUnits.map(u => ({ ...u, currentHp: Math.max(0, u.currentHp) }))
   );
-  
-  const [currentActionIndex, setCurrentActionIndex] = useState(-1);
-  const [activeUnitId, setActiveUnitId] = useState<string | null>(null);
-  const [targetedUnitId, setTargetedUnitId] = useState<string | null>(null);
-  const [damagePopups, setDamagePopups] = useState<DamagePopup[]>([]);
-  const [psynergyEffect, setPsynergyEffect] = useState<string | null>(null);
-  const [battleComplete, setBattleComplete] = useState(false);
 
-  // Auto-play battle actions
+  // Turn & UI state
+  const [turnsTaken, setTurnsTaken] = useState(0);
+  const [roundOrder, setRoundOrder] = useState<string[]>([]);
+  const [roundIdx, setRoundIdx] = useState(0);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [targetedId, setTargetedId] = useState<string | null>(null);
+
+  const [phase, setPhase] = useState<Phase>('menu');
+  const [menuIndex, setMenuIndex] = useState(0);
+  const [targetIndex, setTargetIndex] = useState(0);
+
+  // Attack animation state
+  const [showAttackAnim, setShowAttackAnim] = useState(false);
+  const [attackAnimRole, setAttackAnimRole] = useState<any>(null);
+  const [attackAnimPos, setAttackAnimPos] = useState({ x: 0, y: 0 });
+
+  // Flags (e.g., defend)
+  const defending = useRef<Set<string>>(new Set());
+
+  // Log output for RewardSystem
+  const [seq, setSeq] = useState(1);
+  const [actions, setActions] = useState<CombatAction[]>([]);
+
+  // Deterministic RNG for damage variance
+  const rngRef = useRef(makeRng(Date.now()));
+
+  // Enemy refs for position targeting
+  const enemyEls = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Derived lists
+  const alivePlayers = useMemo(() => players.filter(u => u.currentHp > 0), [players]);
+  const aliveEnemies = useMemo(() => enemies.filter(u => u.currentHp > 0), [enemies]);
+
+  // Compute initiative order for a round
+  const computeRoundOrder = useCallback((): string[] => {
+    const alive = [...alivePlayers, ...aliveEnemies];
+    alive.sort((a, b) => {
+      if (b.speed !== a.speed) return b.speed - a.speed;
+      if (a.isPlayer !== b.isPlayer) return a.isPlayer ? -1 : 1;
+      return a.originalIndex - b.originalIndex;
+    });
+    return alive.map(u => u.id);
+  }, [alivePlayers, aliveEnemies]);
+
+  const findUnit = useCallback((id: string): BattleUnit | undefined => {
+    return players.find(u => u.id === id) ?? enemies.find(u => u.id === id);
+  }, [players, enemies]);
+
+  const isBattleOver = useMemo(() => {
+    const playersDead = alivePlayers.length === 0;
+    const enemiesDead = aliveEnemies.length === 0;
+    return { playersDead, enemiesDead, over: playersDead || enemiesDead };
+  }, [alivePlayers, aliveEnemies]);
+
+  const finishBattle = useCallback((winner: 'player' | 'enemy' | 'draw') => {
+    const unitsDefeated = enemyUnits
+      .filter(e => (enemies.find(x => x.id === e.id)?.currentHp ?? 0) <= 0)
+      .map(e => e.id);
+
+    const result: BattleResult = {
+      winner,
+      actions,
+      unitsDefeated,
+      turnsTaken,
+    };
+    onComplete(result);
+  }, [actions, enemies, enemyUnits, onComplete, turnsTaken]);
+
+  // Damage formula
+  const computeDamage = useCallback((attacker: BattleUnit, defender: BattleUnit): number => {
+    const base = Math.floor(attacker.atk - defender.def / 2);
+    const variance = rngRef.current.int(-2, 2);
+    let dmg = Math.max(1, base + variance);
+    if (defending.current.has(defender.id)) {
+      dmg = Math.floor(dmg * 0.5);
+    }
+    return Math.max(1, dmg);
+  }, []);
+
+  const applyDamage = useCallback((defenderId: string, amount: number) => {
+    setPlayers(prev =>
+      prev.map(u => u.id !== defenderId ? u : { ...u, currentHp: Math.max(0, u.currentHp - amount) })
+    );
+    setEnemies(prev =>
+      prev.map(u => u.id !== defenderId ? u : { ...u, currentHp: Math.max(0, u.currentHp - amount) })
+    );
+    if (defending.current.has(defenderId)) {
+      defending.current.delete(defenderId);
+    }
+  }, []);
+
+  const pushAction = useCallback((a: Omit<CombatAction, 'seq'>) => {
+    setActions(prev => [...prev, { ...a, seq }]);
+    setSeq(s => s + 1);
+  }, [seq]);
+
+  const advanceTurnPointer = useCallback(() => {
+    const nextIndex = roundIdx + 1;
+    if (nextIndex >= roundOrder.length) {
+      setTurnsTaken(t => t + 1);
+      const nextOrder = computeRoundOrder();
+      setRoundOrder(nextOrder);
+      setRoundIdx(0);
+      setActiveId(nextOrder[0] ?? null);
+    } else {
+      setRoundIdx(nextIndex);
+      setActiveId(roundOrder[nextIndex] ?? null);
+    }
+  }, [roundIdx, roundOrder, computeRoundOrder]);
+
+  const getTargetCenter = useCallback((id: string) => {
+    const el = enemyEls.current[id];
+    if (!el || typeof window === 'undefined') {
+      return { x: Math.round((typeof window !== 'undefined' ? window.innerWidth : 800) / 2), y: Math.round((typeof window !== 'undefined' ? window.innerHeight : 600) / 2) };
+    }
+    const r = el.getBoundingClientRect();
+    return { 
+      x: Math.round(r.left + r.width / 2 + (typeof window !== 'undefined' ? window.scrollX : 0)), 
+      y: Math.round(r.top + r.height / 2 + (typeof window !== 'undefined' ? window.scrollY : 0))
+    };
+  }, []);
+
+  // Initialize first round
   useEffect(() => {
-    if (currentActionIndex >= result.actions.length - 1) {
-      // Battle complete
-      setBattleComplete(true);
+    const order = computeRoundOrder();
+    setRoundOrder(order);
+    setRoundIdx(0);
+    setActiveId(order[0] ?? null);
+    setPhase('menu');
+  }, [computeRoundOrder]);
+
+  // Handle active unit changes
+  useEffect(() => {
+    if (!activeId) return;
+    if (isBattleOver.over) {
+      if (isBattleOver.enemiesDead) finishBattle('player');
+      else if (isBattleOver.playersDead) finishBattle('enemy');
+      return;
+    }
+    const unit = findUnit(activeId);
+    if (!unit) return;
+
+    if (unit.currentHp <= 0) {
+      advanceTurnPointer();
       return;
     }
 
-    const timer = setTimeout(() => {
-      const nextIndex = currentActionIndex + 1;
-      const action = result.actions[nextIndex];
-
-      if (action.type === 'attack') {
-        // Animate attack
-        setActiveUnitId(action.actorId);
-        setTargetedUnitId(action.targetId || null);
-
-        // Show psynergy effect
-        const effects = [
-          'Blue_Bolt', 'Dragon_Fire', 'Sonic_Slash', 'Inferno',
-          'Spark_Plasma', 'Fiery_Blast', 'Ice_Missile', 'Nettle'
-        ];
-        const randomEffect = effects[Math.floor(Math.random() * effects.length)];
-        setPsynergyEffect(randomEffect);
-
-        // Show damage number
-        setTimeout(() => {
-          if (action.damage && action.targetId) {
-            // Find target position for damage popup
-            const isPlayerTarget = playerUnits.some(u => u.id === action.targetId);
-            const damagePopup: DamagePopup = {
-              id: `${action.seq}-${action.targetId}`,
-              damage: action.damage,
-              x: isPlayerTarget ? 25 : 75, // Left for players, right for enemies
-              y: 40 + Math.random() * 20, // Slight random vertical offset
-            };
-            setDamagePopups(prev => [...prev, damagePopup]);
-
-            // Update HP
-            if (isPlayerTarget) {
-              setPlayerUnits(prev =>
-                prev.map(u =>
-                  u.id === action.targetId
-                    ? { ...u, currentHp: Math.max(0, u.currentHp - action.damage!) }
-                    : u
-                )
-              );
-            } else {
-              setEnemyUnits(prev =>
-                prev.map(u =>
-                  u.id === action.targetId
-                    ? { ...u, currentHp: Math.max(0, u.currentHp - action.damage!) }
-                    : u
-                )
-              );
-            }
-          }
-        }, 400); // Damage appears mid-animation
-
-        // Clear highlights after animation
-        setTimeout(() => {
-          setActiveUnitId(null);
-          setTargetedUnitId(null);
-          setPsynergyEffect(null);
-        }, 800);
-
-      } else if (action.type === 'defeat') {
-        // Unit defeated - HP should already be 0
-        setActiveUnitId(null);
-        setTargetedUnitId(null);
+    if (unit.isPlayer) {
+      setMenuIndex(0);
+      setPhase('menu');
+    } else {
+      // Enemy AI: attack lowest HP player
+      setPhase('animating');
+      const target = [...alivePlayers].sort((a, b) => a.currentHp - b.currentHp)[0];
+      if (!target) {
+        finishBattle('enemy');
+        return;
       }
 
-      setCurrentActionIndex(nextIndex);
-    }, currentActionIndex === -1 ? 1000 : 1200); // First action after 1s, then 1.2s per action
+      const dmg = computeDamage(unit, target);
+      setTargetedId(target.id);
+      
+      // Show attack animation
+      setAttackAnimRole(unit.role);
+      setAttackAnimPos(getTargetCenter(target.id));
+      setShowAttackAnim(true);
+      
+      pushAction({ type: 'attack', actorId: unit.id, targetId: target.id, damage: dmg });
 
-    return () => clearTimeout(timer);
-  }, [currentActionIndex, result.actions, playerUnits, enemyUnits]);
+      setTimeout(() => {
+        applyDamage(target.id, dmg);
+      }, 400);
 
-  // Handle battle completion
-  useEffect(() => {
-    if (battleComplete) {
-      const timer = setTimeout(() => {
-        onComplete();
-      }, 2000); // Show result for 2 seconds before transitioning
-
-      return () => clearTimeout(timer);
+      setTimeout(() => {
+        setShowAttackAnim(false);
+        setTargetedId(null);
+        setPhase('resolving');
+        advanceTurnPointer();
+      }, 800);
     }
-    return undefined;
-  }, [battleComplete, onComplete]);
+  }, [
+    activeId,
+    alivePlayers,
+    advanceTurnPointer,
+    applyDamage,
+    computeDamage,
+    findUnit,
+    finishBattle,
+    getTargetCenter,
+    isBattleOver,
+    pushAction,
+  ]);
+
+  const confirmFlee = useCallback(() => finishBattle('draw'), [finishBattle]);
+
+  const handleConfirmAction = useCallback(() => {
+    if (!activeId) return;
+    const actor = findUnit(activeId);
+    if (!actor || !actor.isPlayer) return;
+
+    const label = ACTIONS[menuIndex];
+    if (label === 'Attack') {
+      if (aliveEnemies.length === 0) return;
+      setTargetIndex(0);
+      setPhase('targeting');
+      setTargetedId(aliveEnemies[0].id);
+    } else if (label === 'Defend') {
+      defending.current.add(actor.id);
+      pushAction({ type: 'defend', actorId: actor.id });
+      setPhase('resolving');
+      advanceTurnPointer();
+    } else if (label === 'Flee') {
+      confirmFlee();
+    }
+  }, [activeId, aliveEnemies, advanceTurnPointer, confirmFlee, findUnit, menuIndex, pushAction]);
+
+  const handleConfirmTarget = useCallback(() => {
+    if (!activeId) return;
+    const actor = findUnit(activeId);
+    if (!actor) return;
+
+    if (phase !== 'targeting') return;
+    const target = aliveEnemies[targetIndex];
+    if (!target) return;
+
+    setPhase('animating');
+
+    const dmg = computeDamage(actor, target);
+    setTargetedId(target.id);
+    
+    // Show attack animation at target position
+    setAttackAnimRole(actor.role);
+    setAttackAnimPos(getTargetCenter(target.id));
+    setShowAttackAnim(true);
+    
+    pushAction({ type: 'attack', actorId: actor.id, targetId: target.id, damage: dmg });
+
+    setTimeout(() => {
+      applyDamage(target.id, dmg);
+    }, 400);
+
+    setTimeout(() => {
+      setShowAttackAnim(false);
+      setTargetedId(null);
+      setPhase('resolving');
+      advanceTurnPointer();
+    }, 800);
+  }, [
+    activeId,
+    advanceTurnPointer,
+    aliveEnemies,
+    applyDamage,
+    computeDamage,
+    findUnit,
+    getTargetCenter,
+    phase,
+    pushAction,
+    targetIndex,
+  ]);
+
+  const keyboardEnabled = phase === 'menu' || phase === 'targeting';
+
+  useKeyboard({
+    enabled: keyboardEnabled,
+    onUp: () => {
+      if (phase !== 'menu') return;
+      setMenuIndex(i => (i - 1 + ACTIONS.length) % ACTIONS.length);
+    },
+    onDown: () => {
+      if (phase !== 'menu') return;
+      setMenuIndex(i => (i + 1) % ACTIONS.length);
+    },
+    onLeft: () => {
+      if (phase !== 'targeting') return;
+      setTargetIndex(i => {
+        const next = (i - 1 + aliveEnemies.length) % Math.max(1, aliveEnemies.length);
+        setTargetedId(aliveEnemies[next]?.id ?? null);
+        return next;
+      });
+    },
+    onRight: () => {
+      if (phase !== 'targeting') return;
+      setTargetIndex(i => {
+        const next = (i + 1) % Math.max(1, aliveEnemies.length);
+        setTargetedId(aliveEnemies[next]?.id ?? null);
+        return next;
+      });
+    },
+    onEnter: () => {
+      if (phase === 'menu') handleConfirmAction();
+      else if (phase === 'targeting') handleConfirmTarget();
+    },
+    onSpace: () => {
+      if (phase === 'menu') handleConfirmAction();
+      else if (phase === 'targeting') handleConfirmTarget();
+    },
+    onEscape: () => {
+      if (phase === 'targeting') {
+        setPhase('menu');
+        setTargetedId(null);
+      } else if (phase === 'menu') {
+        confirmFlee();
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (!activeId && roundOrder.length > 0) {
+      setActiveId(roundOrder[roundIdx] ?? null);
+    }
+    if (isBattleOver.over) {
+      if (isBattleOver.enemiesDead) finishBattle('player');
+      else if (isBattleOver.playersDead) finishBattle('enemy');
+    }
+  }, [activeId, roundIdx, roundOrder, finishBattle, isBattleOver]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-800 to-slate-900 p-8">
-      {/* Battle Title */}
-      <div className="max-w-7xl mx-auto mb-8">
-        <h1 className="text-3xl font-bold text-white text-center">
-          Battle
-        </h1>
-        <div className="text-center text-gray-300 mt-2">
-          Turn {currentActionIndex + 1} / {result.actions.length}
-        </div>
-      </div>
+    <div className="min-h-screen w-full bg-slate-900 text-white relative overflow-hidden">
+      <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.15),rgba(15,23,42,0.85))]" />
 
-      {/* Battle Arena */}
-      <div className="max-w-7xl mx-auto grid grid-cols-2 gap-8 relative">
-        {/* Player Team (Left) */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold text-blue-400 mb-4">Your Team</h2>
-          {playerUnits.map((unit) => (
+      <div className="max-w-6xl mx-auto px-4 pt-8 pb-24 relative">
+        <TurnBanner turn={turnsTaken + 1} />
+
+        {/* Enemy line */}
+        <div className="mt-6 grid grid-cols-4 gap-4 justify-items-center">
+          {enemies.map((u) => (
+            <div key={u.id} ref={(el) => { enemyEls.current[u.id] = el; }}>
+              <EnemyUnit
+                unit={u}
+                isActive={activeId === u.id}
+                isTargeted={targetedId === u.id}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Player line */}
+        <div className="mt-10 grid grid-cols-4 gap-4 justify-items-center">
+          {players.map((u) => (
             <UnitBattleCard
-              key={unit.id}
-              unit={unit}
-              isActive={activeUnitId === unit.id}
-              isTargeted={targetedUnitId === unit.id}
-              isDead={unit.currentHp <= 0}
+              key={u.id}
+              unit={u}
+              isActive={activeId === u.id}
+              isTargeted={targetedId === u.id}
+              isDead={u.currentHp <= 0}
+              className="w-40"
             />
           ))}
         </div>
 
-        {/* Enemy Team (Right) */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold text-red-400 mb-4">Enemies</h2>
-          {enemyUnits.map((unit) => (
-            <UnitBattleCard
-              key={unit.id}
-              unit={unit}
-              isActive={activeUnitId === unit.id}
-              isTargeted={targetedUnitId === unit.id}
-              isDead={unit.currentHp <= 0}
-            />
-          ))}
-        </div>
-
-        {/* Psynergy Animation Overlay */}
-        {psynergyEffect && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <img
-              src={`/sprites/psynergy/${psynergyEffect}.gif`}
-              alt="Attack effect"
-              className="w-64 h-64 object-contain"
-            />
-          </div>
-        )}
-
-        {/* Damage Numbers */}
-        {damagePopups.map((popup) => (
-          <DamageNumber
-            key={popup.id}
-            damage={popup.damage}
-            x={popup.x}
-            y={popup.y}
-            onComplete={() => {
-              setDamagePopups(prev => prev.filter(p => p.id !== popup.id));
-            }}
+        {/* Right-side HUD */}
+        <div className="absolute bottom-6 right-6 w-80">
+          <PlayerStatusPanel
+            unit={findUnit(activeId ?? '') ?? alivePlayers[0] ?? players[0]}
+            phase={phase}
+            defending={defending.current.has(activeId ?? '')}
           />
-        ))}
-      </div>
-
-      {/* Battle Result */}
-      {battleComplete && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-10 max-w-lg text-center shadow-2xl border-4 border-gray-200 dark:border-gray-700">
-            {result.winner === 'player' && (
-              <>
-                <div className="text-7xl mb-4 animate-bounce">🎉</div>
-                <h2 className="text-5xl font-black text-green-500 mb-4 animate-pulse">Victory!</h2>
-                <p className="text-xl text-gray-700 dark:text-gray-300 mb-2">
-                  You defeated the enemies!
-                </p>
-                <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
-                  {result.turnsTaken} turns • {result.unitsDefeated.length} enemies defeated
-                </p>
-                <div className="text-sm text-green-600 dark:text-green-400 font-semibold">
-                  Loading next battle...
-                </div>
-              </>
-            )}
-            {result.winner === 'enemy' && (
-              <>
-                <div className="text-7xl mb-4">💀</div>
-                <h2 className="text-5xl font-black text-red-500 mb-4">Defeat</h2>
-                <p className="text-xl text-gray-700 dark:text-gray-300 mb-2">
-                  Your party was defeated...
-                </p>
-                <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
-                  Survived {result.turnsTaken} turns
-                </p>
-                <div className="text-sm text-gray-500">
-                  Returning to defeat screen...
-                </div>
-              </>
-            )}
-            {result.winner === 'draw' && (
-              <>
-                <div className="text-7xl mb-4">⚔️</div>
-                <h2 className="text-5xl font-black text-gray-500 mb-4">Draw</h2>
-                <p className="text-xl text-gray-700 dark:text-gray-300 mb-2">
-                  Both sides fell in battle...
-                </p>
-                <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
-                  {result.turnsTaken} turns of fierce combat
-                </p>
-                <div className="text-sm text-gray-500">
-                  Restarting...
-                </div>
-              </>
+          <div className="mt-3">
+            <ActionMenu
+              items={ACTIONS as unknown as string[]}
+              selectedIndex={menuIndex}
+              disabled={phase !== 'menu'}
+              title={phase === 'targeting' ? 'Choose Target' : 'Actions'}
+            />
+            {phase === 'targeting' && (
+              <TargetHelp />
             )}
           </div>
         </div>
+      </div>
+
+      {/* Attack animation overlay - FIXED with Prompt 2 solution */}
+      {showAttackAnim && attackAnimRole && (
+        <AttackAnimation
+          attackerRole={attackAnimRole}
+          targetPosition={attackAnimPos}
+          onComplete={() => setShowAttackAnim(false)}
+          duration={800}
+        />
       )}
     </div>
   );
 }
+
+export default BattleScreen;
 

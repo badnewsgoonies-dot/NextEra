@@ -114,12 +114,7 @@ export function App(): React.ReactElement {
       return;
     }
 
-    const battleResult = controller.executeBattle();
-    if (!battleResult.ok) {
-      console.error('Failed to execute battle:', battleResult.error);
-      return;
-    }
-
+    // NO executeBattle call - manual battle screen handles combat
     const selectedPreview = previews.find(p => p.spec.id === opponentId);
     if (selectedPreview) {
       const currentTeam = playerTeam;
@@ -154,28 +149,33 @@ export function App(): React.ReactElement {
 
       setPlayerUnits(playerBattleUnits);
       setEnemyUnits(enemyBattleUnits);
-      setBattleResult(battleResult.value);
       
-      // Generate rewards (create IRng from run seed)
-      const rewardRng = makeRng(controller.getState().runSeed).fork('rewards').fork(String(controller.getState().battleIndex));
-      const generatedRewards = rewardSystem.generateRewards(
-        selectedPreview.spec,
-        battleResult.value,
-        rewardRng
-      );
-      setRewards(generatedRewards);
-      
+      // Rewards will be generated AFTER manual battle completes (in handleBattleComplete)
       setScreen('battle');
     }
   };
 
-  // Battle handlers
-  const handleBattleComplete = () => {
-    if (!battleResult) return;
+  // Battle handlers - NOW accepts result from manual battle screen
+  const handleBattleComplete = (result: BattleResult) => {
+    setBattleResult(result);
+    
+    // Generate rewards if player won
+    if (result.winner === 'player') {
+      const selectedPreview = previews.find(p => p.spec.id === controller.getState().selectedOpponentId);
+      if (selectedPreview) {
+        const rewardRng = makeRng(controller.getState().runSeed).fork('rewards').fork(String(controller.getState().battleIndex));
+        const generatedRewards = rewardSystem.generateRewards(
+          selectedPreview.spec,
+          result,
+          rewardRng
+        );
+        setRewards(generatedRewards);
+      }
+    }
 
-    if (battleResult.winner === 'player') {
+    if (result.winner === 'player') {
       setScreen('rewards');
-    } else if (battleResult.winner === 'enemy') {
+    } else if (result.winner === 'enemy') {
       setScreen('defeat');
     } else {
       // Draw - back to menu
@@ -286,12 +286,11 @@ export function App(): React.ReactElement {
       );
 
     case 'battle':
-      if (!battleResult || playerUnits.length === 0 || enemyUnits.length === 0) {
+      if (playerUnits.length === 0 || enemyUnits.length === 0) {
         return <div>Loading battle...</div>;
       }
       return (
         <BattleScreen
-          result={battleResult}
           playerUnits={playerUnits}
           enemyUnits={enemyUnits}
           onComplete={handleBattleComplete}

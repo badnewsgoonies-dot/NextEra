@@ -1,20 +1,22 @@
-/*
- * BattleSystem: Headless deterministic combat engine
+/**
+ * @deprecated
+ * BattleSystem (Auto-Battle) is deprecated as of NextEra v2.0
  * 
- * Features:
+ * The auto-battler system has been replaced by manual player-controlled combat (BattleScreen.tsx).
+ * This file is preserved for:
+ * - Test reference
+ * - Backward compatibility
+ * - Historical documentation
+ * 
+ * DO NOT USE in new code. Use the manual BattleScreen component instead.
+ * Safe to remove once all dependent code is migrated.
+ * 
+ * Original Features (now in BattleScreen.tsx):
  * - Turn-based combat (speed-based initiative)
- * - Auto-battle (units attack automatically)
  * - Deterministic (same seed + teams = same outcome)
  * - Mutable state (Decision 1b: clone units, mutate HP during battle)
  * - 500 turn limit (Decision 3c: prevent infinite loops)
  * - Draw support (Decision 4c: both teams dead or stalemate)
- * 
- * Combat mechanics:
- * - Turn order: Speed DESC, player wins ties, originalIndex breaks further ties
- * - Targeting: Lowest HP enemy (deterministic)
- * - Damage: floor(atk - def/2) + rng(-2, 2), minimum 1 (Decision 2a)
- * - Victory: All enemies dead = player win, all players dead = enemy win
- * - Stalemate: 500 turns = draw
  */
 
 import type { IRng } from '../utils/rng.js';

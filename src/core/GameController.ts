@@ -29,7 +29,7 @@ import type {
 import { ok, err, type Result } from '../utils/Result.js';
 import { GameStateMachine } from './GameStateMachine.js';
 import { ChoiceSystem } from '../systems/ChoiceSystem.js';
-import { BattleSystem } from '../systems/BattleSystem.js';
+// BattleSystem removed - battles now handled by manual BattleScreen.tsx
 import { SaveSystem, type GameStateSnapshot } from '../systems/SaveSystem.js';
 import { EventLogger } from '../systems/EventLogger.js';
 import { makeRng } from '../utils/rng.js';
@@ -47,7 +47,7 @@ export interface GameControllerState {
 export class GameController {
   private readonly stateMachine: GameStateMachine;
   private readonly choiceSystem: ChoiceSystem;
-  private readonly battleSystem: BattleSystem;
+  // battleSystem removed - manual combat in BattleScreen.tsx
   private readonly saveSystem: SaveSystem;
   private readonly eventLogger: EventLogger;
   
@@ -58,7 +58,7 @@ export class GameController {
     this.stateMachine = new GameStateMachine();
     this.choiceSystem = new ChoiceSystem(logger, { enableLogging: true });
     this.eventLogger = new EventLogger(logger);
-    this.battleSystem = new BattleSystem(logger, this.eventLogger);
+    // battleSystem removed - manual combat in BattleScreen.tsx
     this.saveSystem = saveSystem || new SaveSystem(logger);
 
     // Initialize with empty state
@@ -199,71 +199,18 @@ export class GameController {
   }
 
   /**
-   * Execute the battle
+   * @deprecated
+   * executeBattle() is deprecated - battles are now manual (BattleScreen.tsx)
+   * 
+   * The battle result and progression updates are now handled by:
+   * - BattleScreen.tsx: Runs manual combat, returns BattleResult via onComplete
+   * - App.tsx: Receives result, updates progression, transitions states
+   * 
+   * This method is preserved for backward compatibility with tests.
+   * Remove once all tests are updated to use manual battle flow.
    */
   executeBattle(): Result<BattleResult, string> {
-    if (this.stateMachine.getState() !== 'battle') {
-      return err('Cannot execute battle - not in battle state');
-    }
-
-    if (!this.state.selectedOpponentId || !this.state.currentChoices) {
-      return err('No opponent selected');
-    }
-
-    const selectedChoice = this.state.currentChoices.find(
-      c => c.spec.id === this.state.selectedOpponentId
-    );
-
-    if (!selectedChoice) {
-      return err('Selected opponent not found');
-    }
-
-    // Fork RNG for this battle
-    const battleRng = this.rootRng.fork('battle').fork(String(this.state.battleIndex));
-
-    // Execute battle
-    const result = this.battleSystem.executeBattle(
-      this.state.playerTeam,
-      selectedChoice.spec.units,
-      battleRng,
-      this.state.battleIndex,
-      selectedChoice.spec.id
-    );
-
-    // Update state
-    this.state.lastBattleResult = result;
-    
-    // Update progression (create new object since it's readonly)
-    if (result.winner === 'player') {
-      this.state.progression = {
-        ...this.state.progression,
-        battlesWon: this.state.progression.battlesWon + 1,
-      };
-    } else if (result.winner === 'enemy') {
-      this.state.progression = {
-        ...this.state.progression,
-        battlesLost: this.state.progression.battlesLost + 1,
-      };
-    }
-    // Draw doesn't count as win or loss
-
-    // Transition based on outcome
-    let nextState: GameState;
-    if (result.winner === 'player') {
-      nextState = 'rewards';
-    } else if (result.winner === 'enemy') {
-      nextState = 'defeat';
-    } else {
-      // Draw = instant restart to menu
-      nextState = 'menu';
-    }
-
-    const transition = this.stateMachine.transitionTo(nextState);
-    if (!transition.ok) {
-      return err(`State transition failed: ${transition.error}`);
-    }
-
-    return ok(result);
+    return err('executeBattle is deprecated - use manual BattleScreen.tsx instead');
   }
 
   /**
