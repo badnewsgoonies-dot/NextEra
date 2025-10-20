@@ -1,8 +1,8 @@
 # NextEra MVP - Development Progress
 
 **Last Updated:** October 20, 2025  
-**Current Phase:** Phase 2 Complete → Starting Phase 3  
-**Overall Progress:** 30% to MVP
+**Current Phase:** Phase 3 Complete → Ready for Phase 4 (UI)  
+**Overall Progress:** 50% to MVP
 
 ---
 
@@ -12,13 +12,13 @@
 |-------|--------|-------|------|
 | **Phase 1: Foundation** | ✅ Complete | 19/19 | 1 hour |
 | **Phase 2: Type System** | ✅ Complete | 20/20 | 1 hour |
-| **Phase 3: Systems** | 🟡 In Progress | — | 2-3 days |
+| **Phase 3: Systems** | ✅ Complete | 27/27 | 1 hour |
 | **Phase 4: UI** | ⏸️ Pending | — | 2 days |
 | **Phase 5: Save/Load** | ⏸️ Pending | — | 1 day |
 | **Phase 6: Testing** | ⏸️ Pending | — | 2 days |
 
-**Total Progress:** 2/6 phases complete (33%)  
-**Tests Passing:** 39/39 (100%)  
+**Total Progress:** 3/6 phases complete (50%)  
+**Tests Passing:** 66/66 (100%)  
 **TypeScript Errors:** 0
 
 ---
@@ -123,7 +123,59 @@ export const STATE_TRANSITIONS: Record<GameState, readonly GameState[]> = { ... 
 
 ---
 
-## 🟡 Phase 3: Core Systems (IN PROGRESS)
+## ✅ Phase 3: Core Systems (COMPLETE)
+
+**Duration:** 1 hour  
+**Tests:** 27/27 passing (new)
+
+### Deliverables:
+- ✅ Opponent Catalog (19 OpponentSpec entries)
+- ✅ ChoiceSystem implementation (deterministic 3-card generation)
+- ✅ EventLogger (type-safe game events)
+- ✅ All diversity rules implemented
+- ✅ Property-based tests with fast-check
+
+### Opponent Catalog Highlights:
+```
+19 Opponents Total:
+- Standard: 12 (63%)
+- Normal: 5 (26%)
+- Hard: 2 (11%)
+
+Tags: Undead (4), Mech (3), Beast (3), Holy (3), Arcane (3), Nature (3)
+Roles: Tank, DPS, Support, Specialist (all represented)
+Counter Tags: Manually curated per Decision #4
+```
+
+### ChoiceSystem Features:
+- Deterministic RNG fork per battleIndex
+- Diversity enforcement:
+  * ≥1 Standard difficulty
+  * ≤1 Hard difficulty  
+  * No duplicate primary tags
+  * No back-to-back roles (Decision #3)
+- Re-roll up to 10 attempts
+- Fallback/degraded mode if constraints impossible
+- Event logging (choice:generated, choice:degraded)
+
+### Test Coverage (27 tests):
+- Basic generation (4)
+- Determinism with property tests (3)
+- Diversity rules validation (4)
+- Re-roll logic (2)
+- Fallback mode (2)
+- Unit summaries (1)
+- Property-based tests (3 with 200 runs)
+- Event logging (2)
+- Catalog integration (2)
+- Edge cases (4)
+
+### Commits:
+4. `0147242` - "feat: Phase 3 - ChoiceSystem with opponent catalog and event logging"
+
+---
+
+## ⏸️ Phase 4-6: Pending
 
 **Status:** Ready to start  
 **Estimated Duration:** 2-3 days
@@ -155,18 +207,18 @@ export const STATE_TRANSITIONS: Record<GameState, readonly GameState[]> = { ... 
 ## 📈 Metrics
 
 ### Code Statistics:
-- **Files Created:** 24
-- **Lines of Code:** ~4,500 (including docs)
-- **Tests:** 39 (all passing)
-- **Test Coverage:** 100% of migrated code
+- **Files Created:** 28
+- **Lines of Code:** ~6,000 (including docs)
+- **Tests:** 66 (all passing)
+- **Test Coverage:** 100% of implemented code
 - **TypeScript Errors:** 0
 - **Dependencies:** 198 packages
 
 ### Time Tracking:
-- **Time Spent:** 2 hours (Phase 1 + 2)
-- **Time Saved:** ~16 hours (by reusing legacy)
-- **Remaining:** ~10-11 days to MVP
-- **Total Timeline:** 12-13 days estimated
+- **Time Spent:** 3 hours (Phase 1 + 2 + 3)
+- **Time Saved:** ~20 hours (by reusing legacy)
+- **Remaining:** ~8-9 days to MVP
+- **Total Timeline:** 11-12 days estimated
 
 ### Quality Metrics:
 - ✅ **Determinism:** Verified (RNG tests pass)
