@@ -11,7 +11,7 @@
  * - Accessibility (ARIA, screen reader)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { UnitCard } from '../components/UnitCard.js';
 import type { PlayerUnit } from '../types/game.js';
 import { STARTER_CATALOG } from '../data/starterUnits.js';
@@ -27,6 +27,8 @@ export function StarterSelectScreen({
 }: StarterSelectScreenProps): React.ReactElement {
   const [selectedUnits, setSelectedUnits] = useState<Set<string>>(new Set());
   const [focusedIndex, setFocusedIndex] = useState(0);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [gridCols, setGridCols] = useState(3);
 
   const maxSelection = 4;
   const canStart = selectedUnits.size === maxSelection;
@@ -52,10 +54,23 @@ export function StarterSelectScreen({
     }
   };
 
+  // Compute grid columns for responsive keyboard navigation
+  useEffect(() => {
+    const computeCols = () => {
+      const el = gridRef.current;
+      if (!el) return;
+      const cols = getComputedStyle(el).gridTemplateColumns.split(' ').length;
+      setGridCols(cols || 1);
+    };
+    
+    computeCols();
+    window.addEventListener('resize', computeCols);
+    return () => window.removeEventListener('resize', computeCols);
+  }, []);
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const gridCols = 3; // 3 columns in grid
       const totalUnits = STARTER_CATALOG.length;
 
       switch (e.key) {
@@ -102,7 +117,7 @@ export function StarterSelectScreen({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedIndex, canStart, onCancel]);
+  }, [focusedIndex, canStart, onCancel, gridCols]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
@@ -139,6 +154,7 @@ export function StarterSelectScreen({
       {/* Unit grid */}
       <div className="max-w-6xl mx-auto">
         <div
+          ref={gridRef}
           role="group"
           aria-label="Starter units selection"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8"

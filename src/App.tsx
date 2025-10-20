@@ -53,6 +53,13 @@ export function App(): React.ReactElement {
 
   // Menu handlers
   const handleNewGame = () => {
+    // Reset all transient state from previous runs
+    setPreviews([]);
+    setBattleResult(null);
+    setRewards(null);
+    setPlayerUnits([]);
+    setEnemyUnits([]);
+    setPlayerTeam([]);
     setScreen('starter_select');
   };
 

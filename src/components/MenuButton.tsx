@@ -53,7 +53,7 @@ export const MenuButton = React.memo(function MenuButton({
     ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-600 cursor-not-allowed opacity-50'
     : selected
     ? 'bg-primary text-white shadow-lg scale-105 cursor-pointer'
-    : 'bg-white dark:bg-surface-dark text-gray-900 dark:text-white shadow-md hover:shadow-lg hover:scale-102 cursor-pointer';
+    : 'bg-white dark:bg-surface-dark text-gray-900 dark:text-white shadow-md hover:shadow-lg hover:scale-105 cursor-pointer';
 
   return (
     <button

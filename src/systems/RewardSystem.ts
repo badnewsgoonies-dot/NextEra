@@ -43,16 +43,22 @@ export class RewardSystem {
     // Roll for item drops
     const items = this.rollItems(rng, opponentSpec.difficulty);
 
+    // Only return actually defeated enemies (not all opponent units)
+    const defeatedEnemies = opponentSpec.units.filter(unit =>
+      battleResult.unitsDefeated.includes(unit.id)
+    );
+
     this.logger.info('rewards:generated', {
       opponentId: opponentSpec.id,
       difficulty: opponentSpec.difficulty,
       experience,
       itemCount: items.length,
+      defeatedCount: defeatedEnemies.length,
     });
 
     return {
       items,
-      defeatedEnemies: opponentSpec.units,
+      defeatedEnemies,
       experience,
     };
   }

@@ -77,10 +77,11 @@ export function SettingsScreen({
 
           {/* Master Volume */}
           <div className="mb-4">
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="masterVolume" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Master Volume: {settings.audio.masterVolume}%
             </label>
             <input
+              id="masterVolume"
               type="range"
               min="0"
               max="100"
@@ -92,10 +93,11 @@ export function SettingsScreen({
 
           {/* Music Volume */}
           <div className="mb-4">
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="musicVolume" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Music Volume: {settings.audio.musicVolume}%
             </label>
             <input
+              id="musicVolume"
               type="range"
               min="0"
               max="100"
@@ -107,10 +109,11 @@ export function SettingsScreen({
 
           {/* SFX Volume */}
           <div className="mb-4">
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="sfxVolume" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               SFX Volume: {settings.audio.sfxVolume}%
             </label>
             <input
+              id="sfxVolume"
               type="range"
               min="0"
               max="100"
@@ -126,6 +129,10 @@ export function SettingsScreen({
               Mute All Audio
             </span>
             <button
+              type="button"
+              role="switch"
+              aria-checked={settings.audio.muted}
+              aria-label="Mute All Audio"
               onClick={() => handleToggle('audio', 'muted', !settings.audio.muted)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                 settings.audio.muted ? 'bg-red-600' : 'bg-green-600'
@@ -152,6 +159,10 @@ export function SettingsScreen({
               High Contrast Mode
             </span>
             <button
+              type="button"
+              role="switch"
+              aria-checked={settings.accessibility.highContrast}
+              aria-label="High Contrast Mode"
               onClick={() => handleToggle('accessibility', 'highContrast', !settings.accessibility.highContrast)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                 settings.accessibility.highContrast ? 'bg-primary' : 'bg-gray-300'
@@ -171,6 +182,10 @@ export function SettingsScreen({
               Reduce Motion
             </span>
             <button
+              type="button"
+              role="switch"
+              aria-checked={settings.accessibility.reduceMotion}
+              aria-label="Reduce Motion"
               onClick={() => handleToggle('accessibility', 'reduceMotion', !settings.accessibility.reduceMotion)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                 settings.accessibility.reduceMotion ? 'bg-primary' : 'bg-gray-300'
@@ -247,6 +262,10 @@ export function SettingsScreen({
               Auto-Save
             </span>
             <button
+              type="button"
+              role="switch"
+              aria-checked={settings.gameplay.autoSave}
+              aria-label="Auto-Save"
               onClick={() => handleToggle('gameplay', 'autoSave', !settings.gameplay.autoSave)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                 settings.gameplay.autoSave ? 'bg-primary' : 'bg-gray-300'
@@ -266,6 +285,10 @@ export function SettingsScreen({
               Show Damage Numbers
             </span>
             <button
+              type="button"
+              role="switch"
+              aria-checked={settings.gameplay.showDamageNumbers}
+              aria-label="Show Damage Numbers"
               onClick={() => handleToggle('gameplay', 'showDamageNumbers', !settings.gameplay.showDamageNumbers)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                 settings.gameplay.showDamageNumbers ? 'bg-primary' : 'bg-gray-300'
@@ -285,6 +308,10 @@ export function SettingsScreen({
               Show Counter Tags
             </span>
             <button
+              type="button"
+              role="switch"
+              aria-checked={settings.gameplay.showCounterTags}
+              aria-label="Show Counter Tags"
               onClick={() => handleToggle('gameplay', 'showCounterTags', !settings.gameplay.showCounterTags)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                 settings.gameplay.showCounterTags ? 'bg-primary' : 'bg-gray-300'
