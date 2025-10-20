@@ -10,6 +10,7 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    host: true, // Allow network access for iPad/mobile testing
   },
   build: {
     target: 'esnext',
