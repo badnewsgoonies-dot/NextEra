@@ -372,3 +372,13 @@ export interface ISerializable {
   deserialize(json: string): Result<void, Error>;
 }
 
+/**
+ * Save store interface (storage abstraction)
+ */
+export interface ISaveStore {
+  write(slot: string, payload: string): Promise<void>;
+  read(slot: string): Promise<string>;
+  delete(slot: string): Promise<void>;
+  list(): Promise<Array<{ slot: string; modified: string; size: number }>>;
+}
+
