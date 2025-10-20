@@ -15,10 +15,35 @@
  */
 
 import React from 'react';
-import type { OpponentPreview } from '../types/game.js';
+import type { OpponentPreview, Tag, Role } from '../types/game.js';
 import { DifficultyDots } from './DifficultyDots.js';
 import { CounterTags } from './CounterTags.js';
 import { DEFAULT_FLAGS } from '../types/game.js';
+
+// Helper to get tag-specific classes (Tailwind JIT needs full class names)
+function getPrimaryTagClasses(tag: Tag): string {
+  const baseClasses = 'inline-block px-3 py-1 rounded-md text-sm font-semibold text-white';
+  const tagColors: Record<Tag, string> = {
+    Undead: 'bg-tag-undead',
+    Mech: 'bg-tag-mech',
+    Beast: 'bg-tag-beast',
+    Holy: 'bg-tag-holy',
+    Arcane: 'bg-tag-arcane',
+    Nature: 'bg-tag-nature',
+  };
+  return `${baseClasses} ${tagColors[tag]}`;
+}
+
+// Helper to get role-specific classes
+function getRoleDotClasses(role: Role): string {
+  const roleColors: Record<Role, string> = {
+    Tank: 'bg-role-tank',
+    DPS: 'bg-role-dps',
+    Support: 'bg-role-support',
+    Specialist: 'bg-role-specialist',
+  };
+  return `w-2 h-2 rounded-full ${roleColors[role]}`;
+}
 
 export interface OpponentCardProps {
   preview: OpponentPreview;
@@ -94,7 +119,7 @@ export const OpponentCard = React.memo(function OpponentCard({
 
       {/* Primary Tag */}
       <div className="mb-3">
-        <span className={`inline-block px-3 py-1 rounded-md text-sm font-semibold bg-tag-${spec.primaryTag.toLowerCase()} text-white`}>
+        <span className={getPrimaryTagClasses(spec.primaryTag)}>
           {spec.primaryTag}
         </span>
       </div>
@@ -121,7 +146,7 @@ export const OpponentCard = React.memo(function OpponentCard({
                 className="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2"
                 role="listitem"
               >
-                <span className={`w-2 h-2 rounded-full bg-role-${unit.role.toLowerCase()}`} aria-hidden="true" />
+                <span className={getRoleDotClasses(unit.role)} aria-hidden="true" />
                 <span>{unit.name}</span>
                 <span className="text-xs text-gray-500">({unit.role})</span>
               </li>
