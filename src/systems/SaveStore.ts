@@ -71,7 +71,12 @@ export class LocalStorageSaveStore implements ISaveStore {
 
   private setIndex(slots: string[]): void {
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(this.indexKey, JSON.stringify(slots));
+      try {
+        localStorage.setItem(this.indexKey, JSON.stringify(slots));
+      } catch (error) {
+        // Log but don't throw - this is a best-effort operation
+        console.error('Failed to update save index:', error);
+      }
     }
   }
 
@@ -80,11 +85,16 @@ export class LocalStorageSaveStore implements ISaveStore {
     const entry = { payload, modified: new Date().toISOString() };
     
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(key, JSON.stringify(entry));
+      try {
+        localStorage.setItem(key, JSON.stringify(entry));
 
-      const idx = new Set(this.getIndex());
-      idx.add(slot);
-      this.setIndex([...idx]);
+        const idx = new Set(this.getIndex());
+        idx.add(slot);
+        this.setIndex([...idx]);
+      } catch (error) {
+        console.error('Failed to write save to localStorage:', error);
+        throw new Error('Failed to save: Storage quota may be exceeded');
+      }
     }
   }
 
@@ -93,8 +103,13 @@ export class LocalStorageSaveStore implements ISaveStore {
     const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null;
     if (!raw) throw new Error('ENOENT: Slot not found');
 
-    const entry = JSON.parse(raw) as { payload: string; modified: string };
-    return entry.payload;
+    try {
+      const entry = JSON.parse(raw) as { payload: string; modified: string };
+      return entry.payload;
+    } catch (error) {
+      console.error('Failed to parse save data:', error);
+      throw new Error('Corrupted save data');
+    }
   }
 
   async delete(slot: string): Promise<void> {
@@ -106,11 +121,16 @@ export class LocalStorageSaveStore implements ISaveStore {
     
     if (!localStorage.getItem(key)) throw new Error('ENOENT: Slot not found');
 
-    localStorage.removeItem(key);
+    try {
+      localStorage.removeItem(key);
 
-    const idx = new Set(this.getIndex());
-    idx.delete(slot);
-    this.setIndex([...idx]);
+      const idx = new Set(this.getIndex());
+      idx.delete(slot);
+      this.setIndex([...idx]);
+    } catch (error) {
+      console.error('Failed to delete save from localStorage:', error);
+      throw new Error('Failed to delete save');
+    }
   }
 
   async list(): Promise<Array<{ slot: string; modified: string; size: number }>> {
@@ -119,13 +139,19 @@ export class LocalStorageSaveStore implements ISaveStore {
       const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null;
       if (!raw) return { slot, modified: new Date(0).toISOString(), size: 0 };
 
-      const entry = JSON.parse(raw) as { payload: string; modified: string };
-      const size =
-        typeof entry.payload === 'string'
-          ? byteSize(entry.payload)
-          : byteSize(JSON.stringify(entry.payload));
+      try {
+        const entry = JSON.parse(raw) as { payload: string; modified: string };
+        const size =
+          typeof entry.payload === 'string'
+            ? byteSize(entry.payload)
+            : byteSize(JSON.stringify(entry.payload));
 
-      return { slot, modified: entry.modified, size };
+        return { slot, modified: entry.modified, size };
+      } catch (error) {
+        console.error(`Failed to parse save data for slot ${slot}:`, error);
+        // Return placeholder for corrupted entry
+        return { slot, modified: new Date(0).toISOString(), size: 0 };
+      }
     });
   }
 }
