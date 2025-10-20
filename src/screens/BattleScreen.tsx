@@ -180,28 +180,42 @@ export function BattleScreen({
     setPhase('menu');
   }, [computeRoundOrder]);
 
-  // Handle active unit changes
+  // Handle active unit changes - FIXED: prevent infinite loop
+  const hasHandledTurn = useRef<Set<string>>(new Set());
+  
   useEffect(() => {
     if (!activeId) return;
+    
+    // Prevent handling same unit multiple times
+    const turnKey = `${activeId}-${roundIdx}`;
+    if (hasHandledTurn.current.has(turnKey)) return;
+    
     if (isBattleOver.over) {
       if (isBattleOver.enemiesDead) finishBattle('player');
       else if (isBattleOver.playersDead) finishBattle('enemy');
       return;
     }
+    
     const unit = findUnit(activeId);
     if (!unit) return;
 
     if (unit.currentHp <= 0) {
+      hasHandledTurn.current.add(turnKey);
       advanceTurnPointer();
       return;
     }
 
     if (unit.isPlayer) {
-      setMenuIndex(0);
-      setPhase('menu');
-    } else {
-      // Enemy AI: attack lowest HP player
+      if (phase !== 'menu') {
+        setMenuIndex(0);
+        setPhase('menu');
+      }
+      hasHandledTurn.current.add(turnKey);
+    } else if (phase === 'menu' || phase === 'resolving') {
+      // Enemy AI: attack lowest HP player (only trigger once per turn)
+      hasHandledTurn.current.add(turnKey);
       setPhase('animating');
+      
       const target = [...alivePlayers].sort((a, b) => a.currentHp - b.currentHp)[0];
       if (!target) {
         finishBattle('enemy');
@@ -231,6 +245,8 @@ export function BattleScreen({
     }
   }, [
     activeId,
+    roundIdx,
+    phase,
     alivePlayers,
     advanceTurnPointer,
     applyDamage,
