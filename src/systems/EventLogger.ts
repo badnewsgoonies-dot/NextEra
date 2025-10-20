@@ -84,7 +84,7 @@ export class EventLogger {
    */
   logBattleEnded(data: {
     battleIndex: number;
-    winner: 'player' | 'enemy';
+    winner: 'player' | 'enemy' | 'draw';
     turnsTaken: number;
     unitsDefeated: readonly string[];
   }): void {

@@ -81,6 +81,24 @@ export interface PlayerUnit extends Unit {
   readonly spriteUrl?: string;
 }
 
+/**
+ * Battle unit (mutable combat state)
+ * Used during battle execution - allows HP to change
+ */
+export interface BattleUnit {
+  readonly id: string;
+  readonly name: string;
+  readonly role: Role;
+  readonly tags: readonly Tag[];
+  currentHp: number; // MUTABLE during battle
+  readonly maxHp: number;
+  readonly atk: number;
+  readonly def: number;
+  readonly speed: number;
+  readonly isPlayer: boolean;
+  readonly originalIndex: number; // For deterministic tie-breaking
+}
+
 // ============================================
 // Opponent System (ChoiceSystem)
 // ============================================
@@ -223,7 +241,7 @@ export interface CombatAction {
  * Battle result (after battle ends)
  */
 export interface BattleResult {
-  readonly winner: 'player' | 'enemy';
+  readonly winner: 'player' | 'enemy' | 'draw'; // Draw added for simultaneous defeat or stalemate
   readonly actions: readonly CombatAction[];
   readonly unitsDefeated: readonly string[]; // Unit IDs
   readonly turnsTaken: number;
@@ -256,7 +274,7 @@ export const STATE_TRANSITIONS: Record<GameState, readonly GameState[]> = {
   starter_select: ['opponent_select'],
   opponent_select: ['team_prep'],
   team_prep: ['battle'],
-  battle: ['rewards', 'defeat'], // Can win or lose
+  battle: ['rewards', 'defeat', 'menu'], // Can win, lose, or draw (draw = instant restart)
   rewards: ['recruit'],
   recruit: ['opponent_select'], // Loop back for next battle
   defeat: ['menu'], // Decision #5: Instant restart

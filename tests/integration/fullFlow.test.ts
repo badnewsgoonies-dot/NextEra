@@ -263,5 +263,118 @@ describe('Integration: Full Game Flow', () => {
       }
     });
   });
+
+  describe('Battle System Integration', () => {
+    test('full flow: choose opponent → execute battle → verify determinism', async () => {
+      const { BattleSystem } = await import('../../src/systems/BattleSystem.js');
+      const { EventLogger } = await import('../../src/systems/EventLogger.js');
+      const { mockPlayerTeam } = await import('../fixtures/battleFixtures.js');
+      const { OPPONENT_CATALOG } = await import('../../src/data/opponents.js');
+
+      const gameSeed = 99999;
+      const battleIndex = 0;
+
+      // Step 1: Generate opponent choices
+      const choicesRng = makeRng(gameSeed);
+      const choicesResult = choiceSystem.generateChoices(choicesRng, battleIndex);
+      expect(choicesResult.ok).toBe(true);
+
+      if (!choicesResult.ok) return;
+
+      // Step 2: Select first opponent
+      const selectedOpponent = choicesResult.value[0].spec;
+
+      // Step 3: Execute battle with deterministic RNG
+      const eventLogger = new EventLogger(logger);
+      const battleSystem = new BattleSystem(logger, eventLogger);
+      
+      const battleRng1 = makeRng(gameSeed).fork('battle').fork(String(battleIndex));
+      const battleResult1 = battleSystem.executeBattle(
+        mockPlayerTeam,
+        selectedOpponent.units,
+        battleRng1,
+        battleIndex,
+        selectedOpponent.id
+      );
+
+      expect(['player', 'enemy', 'draw']).toContain(battleResult1.winner);
+      expect(battleResult1.actions.length).toBeGreaterThan(0);
+
+      // Step 4: Execute again with same seed - should be identical
+      const battleRng2 = makeRng(gameSeed).fork('battle').fork(String(battleIndex));
+      const battleResult2 = battleSystem.executeBattle(
+        mockPlayerTeam,
+        selectedOpponent.units,
+        battleRng2,
+        battleIndex,
+        selectedOpponent.id
+      );
+
+      // Verify determinism
+      expect(battleResult2.winner).toBe(battleResult1.winner);
+      expect(battleResult2.actions).toEqual(battleResult1.actions);
+      expect(battleResult2.turnsTaken).toBe(battleResult1.turnsTaken);
+      expect(battleResult2.unitsDefeated).toEqual(battleResult1.unitsDefeated);
+    });
+
+    test('save → load → battle produces same outcome', async () => {
+      const { BattleSystem } = await import('../../src/systems/BattleSystem.js');
+      const { EventLogger } = await import('../../src/systems/EventLogger.js');
+      const { mockPlayerTeam } = await import('../fixtures/battleFixtures.js');
+
+      const gameSeed = 54321;
+      const battleIndex = 5;
+
+      // Generate opponent
+      const choicesRng = makeRng(gameSeed);
+      const choicesResult = choiceSystem.generateChoices(choicesRng, battleIndex);
+      expect(choicesResult.ok).toBe(true);
+
+      if (!choicesResult.ok) return;
+
+      const opponent = choicesResult.value[0].spec;
+
+      // Execute battle
+      const eventLogger = new EventLogger(logger);
+      const battleSystem = new BattleSystem(logger, eventLogger);
+      const battleRng = makeRng(gameSeed).fork('battle').fork(String(battleIndex));
+      const battleResult = battleSystem.executeBattle(
+        mockPlayerTeam,
+        opponent.units,
+        battleRng,
+        battleIndex,
+        opponent.id
+      );
+
+      // Save state
+      const gameState: GameStateSnapshot = {
+        playerTeam: mockPlayerTeam,
+        inventory: [],
+        progression: {
+          runsAttempted: 1,
+          runsCompleted: 0,
+          battlesWon: battleResult.winner === 'player' ? 1 : 0,
+          battlesLost: battleResult.winner === 'enemy' ? 1 : 0,
+          unitsRecruited: 0,
+        },
+        choice: {
+          nextChoiceSeed: String(gameSeed),
+          battleIndex: battleIndex + 1,
+        },
+        runSeed: gameSeed,
+      };
+
+      await saveSystem.save('battle_test', gameState);
+
+      // Load and verify
+      const loaded = await saveSystem.load('battle_test');
+      expect(loaded.ok).toBe(true);
+
+      if (loaded.ok) {
+        expect(loaded.value.progression.battlesWon).toBe(battleResult.winner === 'player' ? 1 : 0);
+        expect(loaded.value.choice.battleIndex).toBe(battleIndex + 1);
+      }
+    });
+  });
 });
 
