@@ -17,19 +17,22 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import type { BattleUnit, BattleResult, CombatAction } from '../types/game.js';
 import { useKeyboard } from '../hooks/useKeyboard.js';
-import { UnitBattleCard } from '../components/battle/UnitBattleCard.js';
+import { AnimatedUnitSprite } from '../components/battle/AnimatedUnitSprite.js';
+import { AnimatedEnemySprite } from '../components/battle/AnimatedEnemySprite.js';
+import { GoldenSunHPBar } from '../components/battle/GoldenSunHPBar.js';
 import { AttackAnimation } from '../components/battle/AttackAnimation.js';
 import { ActionMenu } from '../components/battle/ActionMenu.js';
 import { PlayerStatusPanel } from '../components/battle/PlayerStatusPanel.js';
-import { EnemyUnit } from '../components/battle/EnemyUnit.js';
 import { TurnBanner } from '../components/battle/TurnBanner.js';
 import { TargetHelp } from '../components/battle/TargetHelp.js';
 import { makeRng } from '../utils/rng.js';
+import { getBattleBackground, preloadCommonSprites } from '../data/spriteRegistry.js';
 
 export interface ManualBattleScreenProps {
   playerUnits: BattleUnit[];
   enemyUnits: BattleUnit[];
   onComplete: (result: BattleResult) => void;
+  battleIndex?: number; // For deterministic background selection
 }
 
 type Phase = 'menu' | 'targeting' | 'animating' | 'resolving';
@@ -40,7 +43,15 @@ export function BattleScreen({
   playerUnits,
   enemyUnits,
   onComplete,
+  battleIndex = 0,
 }: ManualBattleScreenProps): React.ReactElement {
+  // Golden Sun background (deterministic)
+  const background = useMemo(() => getBattleBackground(battleIndex), [battleIndex]);
+
+  // Preload common sprites on mount
+  useEffect(() => {
+    preloadCommonSprites().catch(err => console.warn('Sprite preload failed:', err));
+  }, []);
   // Mutable battle state (cloned)
   const [players, setPlayers] = useState<BattleUnit[]>(
     playerUnits.map(u => ({ ...u, currentHp: Math.max(0, u.currentHp) }))
@@ -382,36 +393,60 @@ export function BattleScreen({
   }, [activeId, roundIdx, roundOrder, finishBattle, isBattleOver]);
 
   return (
-    <div className="min-h-screen w-full bg-slate-900 text-white relative overflow-hidden">
-      <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.15),rgba(15,23,42,0.85))]" />
+    <div className="min-h-screen w-full text-white relative overflow-hidden">
+      {/* Golden Sun Battle Background */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ 
+          backgroundImage: `url(${background})`,
+          imageRendering: 'pixelated',
+        }}
+      />
+      
+      {/* Dark overlay for better visibility */}
+      <div className="absolute inset-0 bg-black/30" />
 
       <div className="max-w-6xl mx-auto px-4 pt-8 pb-24 relative">
         <TurnBanner turn={turnsTaken + 1} />
 
-        {/* Enemy line */}
+        {/* Enemy line - Golden Sun sprites */}
         <div className="mt-6 grid grid-cols-4 gap-4 justify-items-center">
           {enemies.map((u) => (
-            <div key={u.id} ref={(el) => { enemyEls.current[u.id] = el; }}>
-              <EnemyUnit
+            <div key={u.id} ref={(el) => { enemyEls.current[u.id] = el; }} className="flex flex-col items-center">
+              <AnimatedEnemySprite
                 unit={u}
-                isActive={activeId === u.id}
-                isTargeted={targetedId === u.id}
+                isHit={targetedId === u.id && phase === 'animating'}
+                className={`
+                  transition-all duration-200
+                  ${activeId === u.id ? 'scale-110 drop-shadow-lg' : ''}
+                  ${targetedId === u.id ? 'ring-4 ring-red-400' : ''}
+                `}
               />
+              <div className="mt-2 w-full">
+                <GoldenSunHPBar unit={u} showName={true} />
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Player line */}
+        {/* Player line - Golden Sun sprites */}
         <div className="mt-10 grid grid-cols-4 gap-4 justify-items-center">
           {players.map((u) => (
-            <UnitBattleCard
-              key={u.id}
-              unit={u}
-              isActive={activeId === u.id}
-              isTargeted={targetedId === u.id}
-              isDead={u.currentHp <= 0}
-              className="w-40"
-            />
+            <div key={u.id} className="flex flex-col items-center">
+              <AnimatedUnitSprite
+                unit={u}
+                isAttacking={activeId === u.id && phase === 'animating'}
+                isHit={targetedId === u.id && phase === 'animating'}
+                className={`
+                  transition-all duration-200
+                  ${activeId === u.id ? 'scale-110 drop-shadow-2xl' : ''}
+                  ${targetedId === u.id ? 'ring-4 ring-yellow-400' : ''}
+                `}
+              />
+              <div className="mt-2 w-full px-2">
+                <GoldenSunHPBar unit={u} showName={true} />
+              </div>
+            </div>
           ))}
         </div>
 

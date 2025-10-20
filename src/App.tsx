@@ -294,6 +294,7 @@ export function App(): React.ReactElement {
           playerUnits={playerUnits}
           enemyUnits={enemyUnits}
           onComplete={handleBattleComplete}
+          battleIndex={controller.getState().battleIndex}
         />
       );
 
