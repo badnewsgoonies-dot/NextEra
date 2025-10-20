@@ -5,6 +5,21 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  safelist: [
+    'bg-slate-800',
+    'bg-slate-900',
+    'from-slate-800',
+    'to-slate-900',
+    'text-blue-400',
+    'text-red-400',
+    'bg-green-500',
+    'bg-yellow-500',
+    'bg-red-500',
+    'bg-blue-600',
+    'bg-red-600',
+    'bg-purple-600',
+    'bg-amber-600',
+  ],
   theme: {
     extend: {
       colors: {
