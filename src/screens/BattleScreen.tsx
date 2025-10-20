@@ -209,35 +209,53 @@ export function BattleScreen({
 
       {/* Battle Result */}
       {battleComplete && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-md text-center">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-10 max-w-lg text-center shadow-2xl border-4 border-gray-200 dark:border-gray-700">
             {result.winner === 'player' && (
               <>
-                <h2 className="text-4xl font-bold text-green-500 mb-4">Victory!</h2>
-                <p className="text-gray-700 dark:text-gray-300">
-                  You defeated the enemies in {result.turnsTaken} turns!
+                <div className="text-7xl mb-4 animate-bounce">🎉</div>
+                <h2 className="text-5xl font-black text-green-500 mb-4 animate-pulse">Victory!</h2>
+                <p className="text-xl text-gray-700 dark:text-gray-300 mb-2">
+                  You defeated the enemies!
                 </p>
+                <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
+                  {result.turnsTaken} turns • {result.unitsDefeated.length} enemies defeated
+                </p>
+                <div className="text-sm text-green-600 dark:text-green-400 font-semibold">
+                  Loading next battle...
+                </div>
               </>
             )}
             {result.winner === 'enemy' && (
               <>
-                <h2 className="text-4xl font-bold text-red-500 mb-4">Defeat</h2>
-                <p className="text-gray-700 dark:text-gray-300">
+                <div className="text-7xl mb-4">💀</div>
+                <h2 className="text-5xl font-black text-red-500 mb-4">Defeat</h2>
+                <p className="text-xl text-gray-700 dark:text-gray-300 mb-2">
                   Your party was defeated...
                 </p>
+                <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
+                  Survived {result.turnsTaken} turns
+                </p>
+                <div className="text-sm text-gray-500">
+                  Returning to defeat screen...
+                </div>
               </>
             )}
             {result.winner === 'draw' && (
               <>
-                <h2 className="text-4xl font-bold text-gray-500 mb-4">Draw</h2>
-                <p className="text-gray-700 dark:text-gray-300">
+                <div className="text-7xl mb-4">⚔️</div>
+                <h2 className="text-5xl font-black text-gray-500 mb-4">Draw</h2>
+                <p className="text-xl text-gray-700 dark:text-gray-300 mb-2">
                   Both sides fell in battle...
                 </p>
+                <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
+                  {result.turnsTaken} turns of fierce combat
+                </p>
+                <div className="text-sm text-gray-500">
+                  Restarting...
+                </div>
               </>
             )}
-            <div className="mt-6 text-sm text-gray-500">
-              Proceeding in 2 seconds...
-            </div>
           </div>
         </div>
       )}

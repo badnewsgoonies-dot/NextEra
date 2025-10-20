@@ -35,9 +35,9 @@ export function UnitBattleCard({
   return (
     <div 
       className={`
-        relative p-3 rounded-lg border-2 transition-all duration-300
-        ${isActive ? 'border-yellow-400 shadow-lg shadow-yellow-400/50 scale-105' : 'border-gray-300'}
-        ${isTargeted ? 'border-red-400 shadow-lg shadow-red-400/50' : ''}
+        relative p-4 rounded-lg border-2 transition-all duration-300 bg-white dark:bg-gray-800
+        ${isActive ? 'border-yellow-400 shadow-lg shadow-yellow-400/50 scale-105 ring-4 ring-yellow-400/30' : 'border-gray-600 dark:border-gray-500'}
+        ${isTargeted ? 'border-red-400 shadow-lg shadow-red-400/50 ring-4 ring-red-400/30' : ''}
         ${isDead ? 'opacity-30 grayscale' : 'opacity-100'}
         ${className}
       `}

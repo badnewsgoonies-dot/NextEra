@@ -12,10 +12,12 @@ import { ConsoleLogger } from './systems/Logger.js';
 import { GameController } from './core/GameController.js';
 import { OpponentSelectScreen } from './screens/OpponentSelectScreen.js';
 import { BattleScreen } from './screens/BattleScreen.js';
-import type { OpponentPreview, BattleResult, BattleUnit } from './types/game.js';
+import { RewardsScreen } from './screens/RewardsScreen.js';
+import { RecruitScreen } from './screens/RecruitScreen.js';
+import type { OpponentPreview, BattleResult, BattleUnit, BattleReward } from './types/game.js';
 import { mockPlayerTeam } from '../tests/fixtures/battleFixtures.js';
 
-type AppScreen = 'loading' | 'opponent_select' | 'battle' | 'victory' | 'defeat';
+type AppScreen = 'loading' | 'opponent_select' | 'battle' | 'rewards' | 'recruit' | 'defeat';
 
 export function App(): React.ReactElement {
   const [controller] = useState(() => new GameController(new ConsoleLogger('info')));
@@ -109,18 +111,8 @@ export function App(): React.ReactElement {
     if (!battleResult) return;
 
     if (battleResult.winner === 'player') {
-      setScreen('victory');
-      
-      // Auto-advance to next battle after victory
-      setTimeout(() => {
-        // For demo, loop back to opponent select
-        const choicesResult = controller.generateOpponentChoices();
-        
-        if (choicesResult.ok) {
-          setPreviews(choicesResult.value);
-          setScreen('opponent_select');
-        }
-      }, 3000);
+      // Go to rewards screen
+      setScreen('rewards');
     } else if (battleResult.winner === 'enemy') {
       setScreen('defeat');
     } else {
@@ -136,6 +128,32 @@ export function App(): React.ReactElement {
           }
         }
       }, 2000);
+    }
+  };
+
+  const handleRewardsContinue = () => {
+    setScreen('recruit');
+  };
+
+  const handleRecruit = (enemyId: string, replaceUnitId?: string) => {
+    console.log('Recruited:', enemyId, replaceUnitId ? `(replaced ${replaceUnitId})` : '');
+    
+    // TODO: Actually add enemy to team and remove replaced unit
+    // For now, just advance to next battle
+    
+    const choicesResult = controller.generateOpponentChoices();
+    if (choicesResult.ok) {
+      setPreviews(choicesResult.value);
+      setScreen('opponent_select');
+    }
+  };
+
+  const handleSkipRecruit = () => {
+    // Skip recruitment, go to next battle
+    const choicesResult = controller.generateOpponentChoices();
+    if (choicesResult.ok) {
+      setPreviews(choicesResult.value);
+      setScreen('opponent_select');
     }
   };
 
@@ -179,22 +197,34 @@ export function App(): React.ReactElement {
     );
   }
 
-  // Victory screen
-  if (screen === 'victory') {
+  // Rewards screen
+  if (screen === 'rewards' && battleResult) {
+    // Create mock rewards (TODO: implement RewardSystem)
+    const mockRewards: BattleReward = {
+      items: [],
+      defeatedEnemies: previews.find(p => p.spec.id === controller.getState().selectedOpponentId)?.spec.units || [],
+      experience: battleResult.turnsTaken * 10,
+    };
+
     return (
-      <div className="min-h-screen bg-gradient-to-b from-green-800 to-green-900 flex items-center justify-center">
-        <div className="text-center max-w-md bg-white dark:bg-gray-800 rounded-lg p-8">
-          <h1 className="text-4xl font-bold text-green-500 mb-4">
-            Victory!
-          </h1>
-          <p className="text-gray-700 dark:text-gray-300 mb-4">
-            You won the battle in {battleResult?.turnsTaken} turns!
-          </p>
-          <p className="text-sm text-gray-500">
-            Loading next opponents...
-          </p>
-        </div>
-      </div>
+      <RewardsScreen
+        rewards={mockRewards}
+        onContinue={handleRewardsContinue}
+      />
+    );
+  }
+
+  // Recruit screen
+  if (screen === 'recruit') {
+    const defeatedEnemies = previews.find(p => p.spec.id === controller.getState().selectedOpponentId)?.spec.units || [];
+    
+    return (
+      <RecruitScreen
+        defeatedEnemies={defeatedEnemies}
+        currentTeam={controller.getState().playerTeam}
+        onRecruit={handleRecruit}
+        onSkip={handleSkipRecruit}
+      />
     );
   }
 

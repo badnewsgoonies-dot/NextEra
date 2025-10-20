@@ -29,13 +29,13 @@ export function DamageNumber({ damage, x, y, onComplete }: DamageNumberProps): R
 
   return (
     <div
-      className="absolute pointer-events-none animate-damage-float"
+      className="absolute pointer-events-none animate-damage-float z-50"
       style={{
         left: `${x}%`,
         top: `${y}%`,
       }}
     >
-      <div className="text-3xl font-bold text-red-500 drop-shadow-lg">
+      <div className="text-4xl font-black text-red-600 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] stroke-white">
         -{damage}
       </div>
     </div>
