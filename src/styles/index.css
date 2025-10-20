@@ -1,0 +1,60 @@
+/*
+ * NextEra MVP Styles
+ * Tailwind CSS + Custom Utilities
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Screen reader only utility */
+@layer utilities {
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}
+
+/* Keyboard focus visible styles (accessibility) */
+@layer base {
+  * {
+    @apply focus:outline-none;
+  }
+
+  *:focus-visible {
+    @apply ring-2 ring-primary ring-offset-2;
+  }
+}
+
+/* Custom scrollbar for better aesthetics */
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-gray-100 dark:bg-gray-800;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-gray-400 dark:bg-gray-600 rounded;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500 dark:bg-gray-500;
+  }
+}
+
+/* Kbd element styling */
+kbd {
+  @apply inline-block px-2 py-1 text-xs font-mono bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-sm;
+}
+
