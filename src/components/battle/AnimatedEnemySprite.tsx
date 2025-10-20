@@ -40,6 +40,7 @@ export function AnimatedEnemySprite({
       const timer = setTimeout(() => setShaking(false), 300);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [isHit]);
 
   // Fallback to colored shape
