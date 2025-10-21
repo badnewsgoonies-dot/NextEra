@@ -123,6 +123,47 @@ kbd {
   animation: shake 0.3s ease-in-out;
 }
 
+/* Golden Sun battle glow effects */
+@keyframes battle-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(255, 215, 0, 0.9));
+  }
+}
+
+@keyframes enemy-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(255, 100, 100, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(255, 100, 100, 0.9));
+  }
+}
+
+.animate-battle-glow {
+  animation: battle-glow 1.5s ease-in-out infinite;
+}
+
+.animate-enemy-glow {
+  animation: enemy-glow 1.5s ease-in-out infinite;
+}
+
+/* Subtle idle breathing animation for sprites */
+@keyframes sprite-idle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.sprite-idle {
+  animation: sprite-idle 3s ease-in-out infinite;
+}
+
 /* Respect user's reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .animate-shake,

@@ -25,6 +25,7 @@ import { ActionMenu } from '../components/battle/ActionMenu.js';
 import { PlayerStatusPanel } from '../components/battle/PlayerStatusPanel.js';
 import { TurnBanner } from '../components/battle/TurnBanner.js';
 import { TargetHelp } from '../components/battle/TargetHelp.js';
+import { BattlefieldFloor } from '../components/battle/BattlefieldFloor.js';
 import { makeRng } from '../utils/rng.js';
 import { getBattleBackground, preloadCommonSprites } from '../data/spriteRegistry.js';
 
@@ -433,53 +434,96 @@ export function BattleScreen({
       {/* Gradient overlay for better HUD contrast - darker at bottom, lighter at top */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/25 to-black/55 z-10" />
 
-      <div className="max-w-6xl mx-auto px-4 pt-8 relative z-20" 
-           style={{ paddingBottom: 'max(6rem, env(safe-area-inset-bottom, 1.5rem))' }}>
-        <TurnBanner turn={turnsTaken + 1} />
+      {/* Perspective floor effect for depth */}
+      <BattlefieldFloor />
 
-        {/* Enemy line - Golden Sun sprites */}
-        <div className="mt-6 grid grid-cols-4 gap-4 justify-items-center">
-          {enemies.map((u) => (
-            <div key={u.id} ref={(el) => { enemyEls.current[u.id] = el; }} className="flex flex-col items-center">
-              <AnimatedEnemySprite
-                unit={u}
-                isHit={targetedId === u.id && phase === 'animating'}
-                className={`
-                  transition-all duration-200
-                  ${activeId === u.id ? 'scale-110 drop-shadow-lg' : ''}
-                  ${targetedId === u.id ? 'ring-4 ring-red-400' : ''}
-                `}
-              />
-              <div className="mt-2 w-full">
-                <GoldenSunHPBar unit={u} showName={true} />
-              </div>
-            </div>
-          ))}
+      {/* Battlefield Container - Golden Sun Classic Layout */}
+      <div className="absolute inset-0 z-20 pointer-events-none">
+        
+        {/* ENEMIES - Top-Right Background (smaller, distant) */}
+        <div className="absolute top-12 right-8 md:right-16 lg:right-24 w-[55%] md:w-[50%] lg:w-[45%]">
+          <div className="relative" style={{ minHeight: '280px' }}>
+            {enemies.map((u, idx) => {
+              // Staggered positioning for depth (2 rows, 2 cols max)
+              const row = Math.floor(idx / 2);
+              const col = idx % 2;
+              const xOffset = col * 140 + (row * 25); // Diagonal offset (tighter on mobile)
+              const yOffset = row * 90;
+              
+              return (
+                <div 
+                  key={u.id} 
+                  ref={(el) => { enemyEls.current[u.id] = el; }} 
+                  className="absolute pointer-events-auto"
+                  style={{
+                    left: `${xOffset}px`,
+                    top: `${yOffset}px`,
+                    transform: 'scale(0.7)', // Enemies are smaller (background)
+                  }}
+                >
+                  <div className="flex flex-col items-center">
+                    <AnimatedEnemySprite
+                      unit={u}
+                      isHit={targetedId === u.id && phase === 'animating'}
+                      className={`
+                        transition-all duration-200
+                        ${activeId === u.id ? 'scale-125 brightness-110 drop-shadow-[0_0_20px_rgba(255,100,100,0.8)]' : ''}
+                        ${targetedId === u.id ? 'ring-4 ring-red-400 ring-offset-2 ring-offset-black/50' : ''}
+                      `}
+                    />
+                    <div className="mt-2 w-28 md:w-32">
+                      <GoldenSunHPBar unit={u} showName={true} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Player line - Golden Sun sprites */}
-        <div className="mt-10 grid grid-cols-4 gap-4 justify-items-center">
-          {players.map((u) => (
-            <div key={u.id} className="flex flex-col items-center">
-              <AnimatedUnitSprite
-                unit={u}
-                isAttacking={activeId === u.id && phase === 'animating'}
-                isHit={targetedId === u.id && phase === 'animating'}
-                className={`
-                  transition-all duration-200
-                  ${activeId === u.id ? 'scale-110 drop-shadow-2xl' : ''}
-                  ${targetedId === u.id ? 'ring-4 ring-yellow-400' : ''}
-                `}
-              />
-              <div className="mt-2 w-full px-2">
-                <GoldenSunHPBar unit={u} showName={true} />
-              </div>
-            </div>
-          ))}
+        {/* PARTY - Bottom-Left Foreground (larger, closer) */}
+        <div className="absolute bottom-16 md:bottom-20 left-4 md:left-12 lg:left-16 w-[60%] md:w-[55%] lg:w-[50%]">
+          <div className="relative" style={{ minHeight: '320px' }}>
+            {players.map((u, idx) => {
+              // Staggered positioning for depth (2 rows, 2 cols max)
+              const row = Math.floor(idx / 2);
+              const col = idx % 2;
+              const xOffset = col * 160 + (row * 35); // Diagonal offset
+              const yOffset = row * 110;
+              
+              return (
+                <div 
+                  key={u.id}
+                  className="absolute pointer-events-auto"
+                  style={{
+                    left: `${xOffset}px`,
+                    bottom: `${yOffset}px`,
+                    transform: 'scale(1.0)', // Party is full size (foreground)
+                  }}
+                >
+                  <div className="flex flex-col items-center">
+                    <AnimatedUnitSprite
+                      unit={u}
+                      isAttacking={activeId === u.id && phase === 'animating'}
+                      isHit={targetedId === u.id && phase === 'animating'}
+                      className={`
+                        transition-all duration-200
+                        ${activeId === u.id ? 'scale-110 brightness-125 drop-shadow-[0_0_25px_rgba(255,215,0,0.9)]' : ''}
+                        ${targetedId === u.id ? 'ring-4 ring-yellow-400 ring-offset-2 ring-offset-black/50' : ''}
+                      `}
+                    />
+                    <div className="mt-3 w-32 md:w-36">
+                      <GoldenSunHPBar unit={u} showName={true} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Right-side HUD - with safe area support for mobile */}
-        <div className="absolute right-6 w-80 z-30" 
+        {/* Right-side HUD - Golden Sun Style */}
+        <div className="absolute right-4 md:right-6 w-72 md:w-80 pointer-events-auto z-30" 
              style={{ bottom: 'max(1.5rem, env(safe-area-inset-bottom, 1.5rem))' }}>
           <PlayerStatusPanel
             unit={findUnit(activeId ?? '') ?? alivePlayers[0] ?? players[0]}
@@ -498,6 +542,11 @@ export function BattleScreen({
               <TargetHelp />
             )}
           </div>
+        </div>
+
+        {/* Top-Left Turn Banner */}
+        <div className="absolute top-6 left-4 md:left-8 pointer-events-auto">
+          <TurnBanner turn={turnsTaken + 1} />
         </div>
       </div>
 
