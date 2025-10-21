@@ -18,6 +18,7 @@ npm run dev
 ```
 
 **Features:**
+
 - ✅ Deterministic opponent generation (pure-rand RNG)
 - ✅ 3-card selection with diversity rules
 - ✅ Full keyboard navigation (← → ↑ ↓ Enter Escape)
@@ -49,22 +50,26 @@ npm run dev
 ## 🏗️ Architecture
 
 ### **Core Systems:**
+
 - `ChoiceSystem` - Generates 3 opponent cards deterministically
 - `EventLogger` - Type-safe telemetry events
 - `GameStateMachine` - State transition enforcement
 
 ### **Data:**
+
 - Opponent catalog: 19 enemies (Standard/Normal/Hard)
 - All tags: Undead, Mech, Beast, Holy, Arcane, Nature
 - All roles: Tank, DPS, Support, Specialist
 
 ### **UI:**
+
 - `OpponentSelectScreen` - Main selection interface
 - `OpponentCard` - Interactive preview cards
 - `DifficultyDots` - Visual difficulty indicator
 - `CounterTags` - Feature-flagged tag badges
 
 ### **Infrastructure:**
+
 - `pure-rand` - Deterministic RNG (xoroshiro128plus)
 - Vite + React + TypeScript + Tailwind CSS
 - Vitest + fast-check for testing
@@ -108,12 +113,14 @@ npm run dev
 ## 📚 Documentation
 
 **Essential Docs:**
+
 - `QUICKSTART.md` - 5-minute setup guide
 - `ARCHITECTURE_DECISIONS.md` - Core architectural decisions
 - `CURRENT_STATE_ASSESSMENT.md` - Latest project status
 - `QA_CHECKLIST.md` - Quality verification
 
 **Historical Docs:**
+
 - `docs/` - Archived development history, legacy analysis, and planning
 
 ---
@@ -128,6 +135,7 @@ npm run type-check       # TypeScript compilation
 ```
 
 **Test Coverage:**
+
 - RNG determinism: 9 tests
 - RNG streams: 10 tests
 - State machine: 20 tests
@@ -163,17 +171,20 @@ npm run type-check       # TypeScript compilation check
 ## 🎮 Features
 
 ### **Deterministic Opponent Selection:**
+
 - Same seed + battle index = same 3 opponents
 - Verified with 200+ property test runs
 - Fork-able RNG for independent streams
 
 ### **Diversity Rules:**
+
 - At least 1 Standard difficulty
 - At most 1 Hard difficulty
 - No duplicate primary tags
 - No back-to-back same roles
 
 ### **Accessibility:**
+
 - Full keyboard navigation
 - ARIA labels on all elements
 - Screen reader announcements
@@ -181,6 +192,7 @@ npm run type-check       # TypeScript compilation check
 - Roving tabindex pattern
 
 ### **Performance:**
+
 - React.memo for optimization
 - CSS transforms only (no layout thrashing)
 - Tailwind JIT for minimal CSS

@@ -171,16 +171,11 @@ const ROLE_FALLBACK_SPRITES: Record<Role, string> = {
 // ============================================
 
 export const BATTLE_BACKGROUNDS = [
-  // GS1 Backgrounds (36)
+  // GS1 Backgrounds (3 for now as requested)
   '/sprites/golden-sun/backgrounds/gs1/Cave.gif',
   '/sprites/golden-sun/backgrounds/gs1/Desert.gif',
-  '/sprites/golden-sun/backgrounds/gs1/Forest.gif',
   '/sprites/golden-sun/backgrounds/gs1/Sol_Sanctum.gif',
-  '/sprites/golden-sun/backgrounds/gs1/Venus_Lighthouse.gif',
-  '/sprites/golden-sun/backgrounds/gs1/Mercury_Lighthouse.gif',
-  '/sprites/golden-sun/backgrounds/gs1/Mars_Lighthouse.gif',
-  '/sprites/golden-sun/backgrounds/gs1/Jupiter_Lighthouse.gif',
-  // ... add all 72 as we discover them
+  // More can be added later
 ];
 
 // ============================================
