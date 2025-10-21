@@ -213,4 +213,4 @@ MIT
 
 ---
 
-**🎉 MVP is 67% complete! Try it at http://localhost:3000** 🚀
+**🎉 MVP is 67% complete! Try it at <http://localhost:3000>** 🚀

@@ -10,7 +10,7 @@
 
 **We've completed the core game loop for NextEra MVP:**
 
-```
+```text
 Start Run
    ↓
 Generate 3 Opponent Choices (ChoiceSystem) ✅

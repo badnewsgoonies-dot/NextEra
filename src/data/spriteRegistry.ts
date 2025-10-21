@@ -71,13 +71,13 @@ export const UNIT_TO_GS_CHARACTER: Record<string, CharacterSpriteMapping> = {
   // === DPS ===
   'Rogue': { 
     gsCharacter: 'ivan', 
-    defaultWeapon: 'lSword', 
-    availableWeapons: ['lSword', 'lBlade'] 
+    defaultWeapon: 'lBlade', 
+    availableWeapons: ['lBlade'] 
   },
   'Mage': { 
     gsCharacter: 'ivan', 
-    defaultWeapon: 'lSword', 
-    availableWeapons: ['lSword'] 
+    defaultWeapon: 'lBlade', 
+    availableWeapons: ['lBlade'] 
   },
   'Ranger': { 
     gsCharacter: 'piers', 

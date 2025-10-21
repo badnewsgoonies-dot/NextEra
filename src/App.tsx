@@ -134,7 +134,7 @@ export function App(): React.ReactElement {
       }));
 
       const enemyBattleUnits: BattleUnit[] = selectedPreview.spec.units.map((template, index) => ({
-        id: template.id,
+        id: `${template.id}_${index}`, // Make unique when same template used multiple times
         name: template.name,
         role: template.role,
         tags: template.tags,
@@ -174,11 +174,15 @@ export function App(): React.ReactElement {
     }
 
     if (result.winner === 'player') {
+      // Transition state machine first
+      controller.getStateMachine().transitionTo('rewards');
       setScreen('rewards');
     } else if (result.winner === 'enemy') {
+      controller.getStateMachine().transitionTo('defeat');
       setScreen('defeat');
     } else {
       // Draw - back to menu
+      controller.getStateMachine().transitionTo('menu');
       setScreen('menu');
     }
   };
