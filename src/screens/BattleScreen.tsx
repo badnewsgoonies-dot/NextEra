@@ -396,7 +396,7 @@ export function BattleScreen({
     <div className="min-h-screen w-full text-white relative overflow-hidden">
       {/* Golden Sun Battle Background */}
       <div 
-        className="absolute inset-0 bg-cover bg-center"
+        className="absolute inset-0 bg-cover bg-center z-0"
         style={{ 
           backgroundImage: `url(${background})`,
           imageRendering: 'pixelated',
@@ -404,9 +404,9 @@ export function BattleScreen({
       />
       
       {/* Dark overlay for better visibility */}
-      <div className="absolute inset-0 bg-black/30" />
+      <div className="absolute inset-0 bg-black/30 z-10" />
 
-      <div className="max-w-6xl mx-auto px-4 pt-8 pb-24 relative">
+      <div className="max-w-6xl mx-auto px-4 pt-8 pb-24 relative z-20">
         <TurnBanner turn={turnsTaken + 1} />
 
         {/* Enemy line - Golden Sun sprites */}
@@ -451,7 +451,7 @@ export function BattleScreen({
         </div>
 
         {/* Right-side HUD */}
-        <div className="absolute bottom-6 right-6 w-80">
+        <div className="absolute bottom-6 right-6 w-80 z-30">
           <PlayerStatusPanel
             unit={findUnit(activeId ?? '') ?? alivePlayers[0] ?? players[0]}
             phase={phase}

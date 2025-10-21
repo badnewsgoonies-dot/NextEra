@@ -82,24 +82,24 @@ export const UNIT_TO_GS_CHARACTER: Record<string, CharacterSpriteMapping> = {
   'Ranger': { 
     gsCharacter: 'piers', 
     defaultWeapon: 'lSword', 
-    availableWeapons: ['lSword', 'Axe'] 
+    availableWeapons: ['lSword', 'Mace'] 
   },
 
   // === SUPPORT ===
   'Cleric': { 
     gsCharacter: 'mia', 
-    defaultWeapon: 'lSword', 
-    availableWeapons: ['lSword', 'Mace'] 
+    defaultWeapon: 'Mace', 
+    availableWeapons: ['Mace'] 
   },
   'Shaman': { 
-    gsCharacter: 'jenna', 
-    defaultWeapon: 'lSword', 
-    availableWeapons: ['lSword', 'Axe'] 
+    gsCharacter: 'jenna_gs2', 
+    defaultWeapon: 'lBlade', 
+    availableWeapons: ['lBlade'] 
   },
   'Bard': { 
     gsCharacter: 'sheba', 
-    defaultWeapon: 'lSword', 
-    availableWeapons: ['lSword'] 
+    defaultWeapon: 'Mace', 
+    availableWeapons: ['Mace'] 
   },
 
   // === SPECIALISTS ===
@@ -110,13 +110,13 @@ export const UNIT_TO_GS_CHARACTER: Record<string, CharacterSpriteMapping> = {
   },
   'Engineer': { 
     gsCharacter: 'piers', 
-    defaultWeapon: 'Axe', 
-    availableWeapons: ['Axe', 'Mace'] 
+    defaultWeapon: 'Mace', 
+    availableWeapons: ['Mace', 'lSword'] 
   },
   'Summoner': { 
     gsCharacter: 'sheba', 
-    defaultWeapon: 'lSword', 
-    availableWeapons: ['lSword'] 
+    defaultWeapon: 'Mace', 
+    availableWeapons: ['Mace'] 
   },
 };
 
