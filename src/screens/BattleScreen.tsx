@@ -440,15 +440,13 @@ export function BattleScreen({
       {/* Battlefield Container - Golden Sun Classic Layout */}
       <div className="absolute inset-0 z-20 pointer-events-none">
         
-        {/* ENEMIES - Top-Right Background (smaller, distant) */}
-        <div className="absolute top-12 right-8 md:right-16 lg:right-24 w-[55%] md:w-[50%] lg:w-[45%]">
-          <div className="relative" style={{ minHeight: '280px' }}>
+        {/* ENEMIES - Top-Right Background (Golden Sun positioning) */}
+        <div className="absolute top-20 md:top-24 right-12 md:right-20 lg:right-32 w-[60%] md:w-[55%] lg:w-[50%]">
+          <div className="relative" style={{ minHeight: '320px' }}>
             {enemies.map((u, idx) => {
-              // Staggered positioning for depth (2 rows, 2 cols max)
-              const row = Math.floor(idx / 2);
-              const col = idx % 2;
-              const xOffset = col * 140 + (row * 25); // Diagonal offset (tighter on mobile)
-              const yOffset = row * 90;
+              // Horizontal row layout for better visibility (Golden Sun style)
+              const xOffset = idx * 180; // Wider spacing
+              const yOffset = idx * 15; // Slight vertical stagger for depth
               
               return (
                 <div 
@@ -458,7 +456,7 @@ export function BattleScreen({
                   style={{
                     left: `${xOffset}px`,
                     top: `${yOffset}px`,
-                    transform: 'scale(0.7)', // Enemies are smaller (background)
+                    transform: 'scale(1.2)', // Larger enemies for better visibility
                   }}
                 >
                   <div className="flex flex-col items-center">
@@ -467,11 +465,11 @@ export function BattleScreen({
                       isHit={targetedId === u.id && phase === 'animating'}
                       className={`
                         transition-all duration-200
-                        ${activeId === u.id ? 'scale-125 brightness-110 drop-shadow-[0_0_20px_rgba(255,100,100,0.8)]' : ''}
-                        ${targetedId === u.id ? 'ring-4 ring-red-400 ring-offset-2 ring-offset-black/50' : ''}
+                        ${activeId === u.id ? 'scale-110 brightness-125 drop-shadow-[0_0_30px_rgba(255,100,100,1)]' : ''}
+                        ${targetedId === u.id ? 'ring-4 ring-red-500 ring-offset-2 ring-offset-black/60 rounded-lg' : ''}
                       `}
                     />
-                    <div className="mt-2 w-28 md:w-32">
+                    <div className="mt-3 w-36 md:w-40">
                       <GoldenSunHPBar unit={u} showName={true} />
                     </div>
                   </div>
@@ -481,15 +479,13 @@ export function BattleScreen({
           </div>
         </div>
 
-        {/* PARTY - Bottom-Left Foreground (larger, closer) */}
-        <div className="absolute bottom-16 md:bottom-20 left-4 md:left-12 lg:left-16 w-[60%] md:w-[55%] lg:w-[50%]">
-          <div className="relative" style={{ minHeight: '320px' }}>
+        {/* PARTY - Bottom-Left Foreground (Golden Sun positioning) */}
+        <div className="absolute bottom-20 md:bottom-24 left-8 md:left-16 lg:left-24 w-[65%] md:w-[60%] lg:w-[55%]">
+          <div className="relative" style={{ minHeight: '360px' }}>
             {players.map((u, idx) => {
-              // Staggered positioning for depth (2 rows, 2 cols max)
-              const row = Math.floor(idx / 2);
-              const col = idx % 2;
-              const xOffset = col * 160 + (row * 35); // Diagonal offset
-              const yOffset = row * 110;
+              // Horizontal row layout (Golden Sun style) - party members side by side
+              const xOffset = idx * 170; // Consistent spacing
+              const yOffset = idx * 12; // Minimal vertical offset for depth effect
               
               return (
                 <div 
@@ -498,7 +494,7 @@ export function BattleScreen({
                   style={{
                     left: `${xOffset}px`,
                     bottom: `${yOffset}px`,
-                    transform: 'scale(1.0)', // Party is full size (foreground)
+                    transform: 'scale(1.3)', // Larger party members (foreground prominence)
                   }}
                 >
                   <div className="flex flex-col items-center">
@@ -508,11 +504,11 @@ export function BattleScreen({
                       isHit={targetedId === u.id && phase === 'animating'}
                       className={`
                         transition-all duration-200
-                        ${activeId === u.id ? 'scale-110 brightness-125 drop-shadow-[0_0_25px_rgba(255,215,0,0.9)]' : ''}
-                        ${targetedId === u.id ? 'ring-4 ring-yellow-400 ring-offset-2 ring-offset-black/50' : ''}
+                        ${activeId === u.id ? 'scale-115 brightness-125 drop-shadow-[0_0_35px_rgba(255,215,0,1)]' : ''}
+                        ${targetedId === u.id ? 'ring-4 ring-yellow-400 ring-offset-2 ring-offset-black/60 rounded-lg' : ''}
                       `}
                     />
-                    <div className="mt-3 w-32 md:w-36">
+                    <div className="mt-3 w-36 md:w-40">
                       <GoldenSunHPBar unit={u} showName={true} />
                     </div>
                   </div>

@@ -48,27 +48,27 @@ export function AnimatedEnemySprite({
   if (spriteLoadFailed || !spritePath) {
     const color = ROLE_COLORS[unit.role];
     return (
-      <div className={`w-20 h-20 rounded ${color} border-4 border-red-900 shadow-lg flex items-center justify-center ${className}`}>
-        <span className="text-white text-xl font-bold">
+      <div className={`w-28 h-28 rounded ${color} border-4 border-red-900 shadow-lg flex items-center justify-center ${className}`}>
+        <span className="text-white text-2xl font-bold">
           {unit.name.charAt(0)}
         </span>
       </div>
     );
   }
 
-  // Render Golden Sun enemy sprite with loading skeleton
+  // Render Golden Sun enemy sprite with loading skeleton (larger size)
   return (
     <div className={`relative ${className}`}>
       {spriteLoading && (
-        <div className="absolute inset-0 w-24 h-24 bg-red-900/30 animate-pulse rounded" />
+        <div className="absolute inset-0 w-32 h-32 bg-red-900/30 animate-pulse rounded" />
       )}
       <img
         src={spritePath}
         alt={unit.name}
-        width={96}
-        height={96}
+        width={128}
+        height={128}
         className={`
-          w-24 h-24 object-contain
+          w-32 h-32 object-contain
           ${shaking ? 'animate-shake' : ''}
           ${unit.currentHp <= 0 ? 'opacity-30 grayscale' : 'opacity-100'}
           ${spriteLoading ? 'opacity-0' : 'opacity-100'}
@@ -89,7 +89,7 @@ export function AnimatedEnemySprite({
       {/* Death overlay */}
       {unit.currentHp <= 0 && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-white text-2xl font-bold drop-shadow-lg">
+          <span className="text-white text-3xl font-bold drop-shadow-lg">
             💀
           </span>
         </div>
