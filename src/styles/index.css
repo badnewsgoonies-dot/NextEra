@@ -3,9 +3,9 @@
  * Tailwind CSS + Custom Utilities
  */
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* stylelint-disable at-rule-no-unknown */
+@import url("https://cdn.jsdelivr.net/npm/tailwindcss@3.4.1/dist/tailwind.min.css");
+/* stylelint-enable at-rule-no-unknown */
 
 /* Screen reader only utility */
 @layer utilities {
@@ -121,5 +121,23 @@ kbd {
 
 .animate-shake {
   animation: shake 0.3s ease-in-out;
+}
+
+/* Respect user's reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-shake,
+  .animate-fadeIn,
+  .animate-damage-float {
+    animation: none !important;
+    opacity: 1;
+    transform: none !important;
+  }
+  
+  /* Keep transitions minimal for reduced motion */
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 

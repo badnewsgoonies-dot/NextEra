@@ -178,6 +178,16 @@ export const BATTLE_BACKGROUNDS = [
   // More can be added later
 ];
 
+// Tag-based background mapping for thematic battles
+const BG_BY_TAG: Record<string, string[]> = {
+  Undead: ['/sprites/golden-sun/backgrounds/gs1/Sol_Sanctum.gif'], // Dark temple
+  Beast: ['/sprites/golden-sun/backgrounds/gs1/Cave.gif'], // Natural cave
+  Mech: ['/sprites/golden-sun/backgrounds/gs1/Desert.gif'], // Barren mechanical
+  Holy: ['/sprites/golden-sun/backgrounds/gs1/Sol_Sanctum.gif'], // Sacred temple
+  Arcane: ['/sprites/golden-sun/backgrounds/gs1/Sol_Sanctum.gif'], // Mystical temple
+  Nature: ['/sprites/golden-sun/backgrounds/gs1/Cave.gif'], // Natural environment
+};
+
 // ============================================
 // Sprite Path Builders
 // ============================================
@@ -192,12 +202,13 @@ export function getPartySpriteSet(
   const mapping = UNIT_TO_GS_CHARACTER[unitName];
   if (!mapping) return null;
 
-  const char = mapping.gsCharacter;
+  const char = mapping.gsCharacter; // e.g., 'jenna_gs2', 'isaac', 'mia'
   const basePath = `/sprites/golden-sun/battle/party/${char}`;
 
-  // Construct full sprite set
-  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-  const charName = capitalize(char);
+  // Extract display name (part before underscore for files like jenna_gs2 -> Jenna)
+  // Filenames use just 'Jenna_*' not 'Jenna_gs2_*'
+  const displayStem = char.includes('_') ? char.split('_')[0] : char;
+  const charName = displayStem.charAt(0).toUpperCase() + displayStem.slice(1);
 
   return {
     idle: `${basePath}/${charName}_${weapon}_Front.gif`,
@@ -243,6 +254,24 @@ export function getBattleBackground(battleIndex: number): string {
 export function getUnitWeapon(unitName: string): WeaponType {
   const mapping = UNIT_TO_GS_CHARACTER[unitName];
   return mapping?.defaultWeapon || 'lSword';
+}
+
+/**
+ * Get battle background based on enemy tags (thematic matching)
+ * Falls back to deterministic selection if no tag match
+ */
+export function getBattleBackgroundForTags(tags: readonly string[], fallbackIndex: number): string {
+  // Try to find a background that matches one of the enemy's tags
+  for (const tag of tags) {
+    const options = BG_BY_TAG[tag];
+    if (options && options.length > 0) {
+      // Use first tag match (could be randomized if desired)
+      return options[0];
+    }
+  }
+  
+  // Fall back to deterministic rotation
+  return getBattleBackground(fallbackIndex);
 }
 
 // ============================================

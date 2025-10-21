@@ -186,6 +186,7 @@ export function StarterSelectScreen({
       {/* Action buttons */}
       <div className="max-w-6xl mx-auto flex justify-between items-center">
         <button
+          type="button"
           onClick={onCancel}
           className="px-6 py-3 rounded-lg bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
         >
@@ -193,6 +194,7 @@ export function StarterSelectScreen({
         </button>
 
         <button
+          type="button"
           onClick={handleStart}
           disabled={!canStart}
           className={`px-8 py-4 rounded-lg font-bold text-xl transition-all ${

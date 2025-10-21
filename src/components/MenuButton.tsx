@@ -41,11 +41,12 @@ export const MenuButton = React.memo(function MenuButton({
     }
   };
 
-  // Base styles
+  // Base styles with high-contrast focus ring
   const baseStyles = `
     px-8 py-4 rounded-lg text-xl font-bold
     transition-all duration-200
-    focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
+    focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 
+    focus-visible:ring-offset-2 focus-visible:ring-offset-black/40
   `;
 
   // State-dependent styles

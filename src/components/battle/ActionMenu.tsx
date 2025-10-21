@@ -11,6 +11,7 @@ export interface ActionMenuProps {
   selectedIndex: number;
   disabled?: boolean;
   title?: string;
+  onSelect?: (index: number) => void;
 }
 
 export function ActionMenu({
@@ -18,6 +19,7 @@ export function ActionMenu({
   selectedIndex,
   disabled = false,
   title = 'Actions',
+  onSelect,
 }: ActionMenuProps): React.ReactElement {
   return (
     <div className="bg-slate-900/80 border-2 border-cyan-400 rounded-lg p-3 shadow-md">
@@ -29,7 +31,7 @@ export function ActionMenu({
             label={label}
             selected={i === selectedIndex}
             disabled={disabled}
-            onClick={() => {/* keyboard handles commit; clicks are no-op here */}}
+            onClick={() => !disabled && onSelect?.(i)}
           />
         ))}
       </div>

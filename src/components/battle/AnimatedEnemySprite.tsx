@@ -29,6 +29,7 @@ export function AnimatedEnemySprite({
   className = '',
 }: AnimatedEnemySpriteProps): React.ReactElement {
   const [spriteLoadFailed, setSpriteLoadFailed] = useState(false);
+  const [spriteLoading, setSpriteLoading] = useState(true);
   const [shaking, setShaking] = useState(false);
 
   const spritePath = getEnemySprite(unit.name, unit.role);
@@ -55,24 +56,33 @@ export function AnimatedEnemySprite({
     );
   }
 
-  // Render Golden Sun enemy sprite
+  // Render Golden Sun enemy sprite with loading skeleton
   return (
     <div className={`relative ${className}`}>
+      {spriteLoading && (
+        <div className="absolute inset-0 w-24 h-24 bg-red-900/30 animate-pulse rounded" />
+      )}
       <img
         src={spritePath}
         alt={unit.name}
+        width={96}
+        height={96}
         className={`
           w-24 h-24 object-contain
           ${shaking ? 'animate-shake' : ''}
           ${unit.currentHp <= 0 ? 'opacity-30 grayscale' : 'opacity-100'}
+          ${spriteLoading ? 'opacity-0' : 'opacity-100'}
+          transition-opacity duration-300
         `}
         style={{ 
           imageRendering: 'pixelated',
           transition: 'opacity 500ms, filter 500ms',
         }}
+        onLoad={() => setSpriteLoading(false)}
         onError={() => {
           console.warn(`Failed to load enemy sprite: ${spritePath}`);
           setSpriteLoadFailed(true);
+          setSpriteLoading(false);
         }}
       />
 

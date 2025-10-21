@@ -292,6 +292,33 @@ export function BattleScreen({
     }
   }, [activeId, aliveEnemies, advanceTurnPointer, confirmFlee, findUnit, menuIndex, pushAction]);
 
+  // Handler for mouse/touch selection in action menu
+  const handleActionSelect = useCallback((index: number) => {
+    if (phase !== 'menu') return;
+    setMenuIndex(index);
+    // Immediately confirm the action on click
+    setTimeout(() => {
+      const label = ACTIONS[index];
+      if (!activeId) return;
+      const actor = findUnit(activeId);
+      if (!actor || !actor.isPlayer) return;
+
+      if (label === 'Attack') {
+        if (aliveEnemies.length === 0) return;
+        setTargetIndex(0);
+        setPhase('targeting');
+        setTargetedId(aliveEnemies[0].id);
+      } else if (label === 'Defend') {
+        defending.current.add(actor.id);
+        pushAction({ type: 'defend', actorId: actor.id });
+        setPhase('resolving');
+        advanceTurnPointer();
+      } else if (label === 'Flee') {
+        confirmFlee();
+      }
+    }, 0);
+  }, [activeId, aliveEnemies, advanceTurnPointer, confirmFlee, findUnit, phase, pushAction]);
+
   const handleConfirmTarget = useCallback(() => {
     if (!activeId) return;
     const actor = findUnit(activeId);
@@ -403,10 +430,11 @@ export function BattleScreen({
         }}
       />
       
-      {/* Dark overlay for better visibility */}
-      <div className="absolute inset-0 bg-black/30 z-10" />
+      {/* Gradient overlay for better HUD contrast - darker at bottom, lighter at top */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/25 to-black/55 z-10" />
 
-      <div className="max-w-6xl mx-auto px-4 pt-8 pb-24 relative z-20">
+      <div className="max-w-6xl mx-auto px-4 pt-8 relative z-20" 
+           style={{ paddingBottom: 'max(6rem, env(safe-area-inset-bottom, 1.5rem))' }}>
         <TurnBanner turn={turnsTaken + 1} />
 
         {/* Enemy line - Golden Sun sprites */}
@@ -450,8 +478,9 @@ export function BattleScreen({
           ))}
         </div>
 
-        {/* Right-side HUD */}
-        <div className="absolute bottom-6 right-6 w-80 z-30">
+        {/* Right-side HUD - with safe area support for mobile */}
+        <div className="absolute right-6 w-80 z-30" 
+             style={{ bottom: 'max(1.5rem, env(safe-area-inset-bottom, 1.5rem))' }}>
           <PlayerStatusPanel
             unit={findUnit(activeId ?? '') ?? alivePlayers[0] ?? players[0]}
             phase={phase}
@@ -463,6 +492,7 @@ export function BattleScreen({
               selectedIndex={menuIndex}
               disabled={phase !== 'menu'}
               title={phase === 'targeting' ? 'Choose Target' : 'Actions'}
+              onSelect={handleActionSelect}
             />
             {phase === 'targeting' && (
               <TargetHelp />

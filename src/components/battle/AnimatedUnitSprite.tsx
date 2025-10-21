@@ -47,6 +47,7 @@ export function AnimatedUnitSprite({
   const animator = useRef(new SpriteAnimator()).current;
   const [currentSprite, setCurrentSprite] = useState<string | null>(null);
   const [spriteLoadFailed, setSpriteLoadFailed] = useState(false);
+  const [spriteLoading, setSpriteLoading] = useState(true);
   const lastAttackState = useRef(isAttacking);
   const lastHitState = useRef(isHit);
 
@@ -119,21 +120,30 @@ export function AnimatedUnitSprite({
     );
   }
 
-  // Render Golden Sun sprite
+  // Render Golden Sun sprite with loading skeleton
   return (
-    <img
-      src={currentSprite}
-      alt={unit.name}
-      className={`w-32 h-32 object-contain ${className}`}
-      style={{ 
-        imageRendering: 'pixelated',
-        filter: unit.currentHp <= 0 ? 'grayscale(100%) opacity(0.5)' : 'none',
-      }}
-      onError={() => {
-        console.warn(`Failed to load sprite: ${currentSprite}`);
-        setSpriteLoadFailed(true);
-      }}
-    />
+    <div className="relative">
+      {spriteLoading && (
+        <div className="absolute inset-0 w-32 h-32 bg-slate-700/50 animate-pulse rounded-lg" />
+      )}
+      <img
+        src={currentSprite}
+        alt={unit.name}
+        width={128}
+        height={128}
+        className={`w-32 h-32 object-contain ${className} ${spriteLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+        style={{ 
+          imageRendering: 'pixelated',
+          filter: unit.currentHp <= 0 ? 'grayscale(100%) opacity(0.5)' : 'none',
+        }}
+        onLoad={() => setSpriteLoading(false)}
+        onError={() => {
+          console.warn(`Failed to load sprite: ${currentSprite}`);
+          setSpriteLoadFailed(true);
+          setSpriteLoading(false);
+        }}
+      />
+    </div>
   );
 }
 
