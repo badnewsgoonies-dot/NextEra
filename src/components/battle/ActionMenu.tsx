@@ -22,9 +22,12 @@ export function ActionMenu({
   onSelect,
 }: ActionMenuProps): React.ReactElement {
   return (
-    <div className="bg-slate-900/80 border-2 border-cyan-400 rounded-lg p-3 shadow-md">
-      <div className="text-sm uppercase tracking-wider text-cyan-300 mb-2">{title}</div>
-      <div className="flex flex-col gap-2">
+    <div className="bg-gradient-to-b from-blue-900/95 to-blue-950/95 border-4 border-yellow-500/80 rounded-xl p-4 shadow-2xl backdrop-blur-sm">
+      <div className="text-base font-bold uppercase tracking-wider text-yellow-300 mb-3 drop-shadow-lg" 
+           style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
+        {title}
+      </div>
+      <div className="flex flex-col gap-2.5">
         {items.map((label, i) => (
           <MenuButton
             key={label}

@@ -112,26 +112,26 @@ export function AnimatedUnitSprite({
   if (spriteLoadFailed || !spriteSet || !currentSprite) {
     const color = ROLE_COLORS[unit.role];
     return (
-      <div className={`w-24 h-24 rounded-full ${color} border-4 border-white shadow-lg flex items-center justify-center ${className}`}>
-        <span className="text-white text-2xl font-bold">
+      <div className={`w-32 h-32 rounded-full ${color} border-4 border-white shadow-lg flex items-center justify-center ${className}`}>
+        <span className="text-white text-3xl font-bold">
           {unit.name.charAt(0)}
         </span>
       </div>
     );
   }
 
-  // Render Golden Sun sprite with loading skeleton
+  // Render Golden Sun sprite with loading skeleton (larger size)
   return (
     <div className="relative">
       {spriteLoading && (
-        <div className="absolute inset-0 w-32 h-32 bg-slate-700/50 animate-pulse rounded-lg" />
+        <div className="absolute inset-0 w-40 h-40 bg-slate-700/50 animate-pulse rounded-lg" />
       )}
       <img
         src={currentSprite}
         alt={unit.name}
-        width={128}
-        height={128}
-        className={`w-32 h-32 object-contain ${className} ${spriteLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+        width={160}
+        height={160}
+        className={`w-40 h-40 object-contain ${className} ${spriteLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
         style={{ 
           imageRendering: 'pixelated',
           filter: unit.currentHp <= 0 ? 'grayscale(100%) opacity(0.5)' : 'none',
