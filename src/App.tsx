@@ -8,6 +8,7 @@
  */
 
 import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext.js';
 import { ConsoleLogger } from './systems/Logger.js';
 import { GameController } from './core/GameController.js';
 import { RewardSystem } from './systems/RewardSystem.js';
@@ -33,7 +34,80 @@ type AppScreen =
   | 'defeat'
   | 'settings';
 
-export function App(): React.ReactElement {
+function AppContent(): React.ReactElement {
+  const { authState, logout } = useAuth();
+
+  // Show auth screens if not authenticated
+  if (!authState.isAuthenticated) {
+    return <AuthFlow />;
+  }
+
+  return <GameApp user={authState.user} onLogout={logout} />;
+}
+
+function AuthFlow(): React.ReactElement {
+  const { login, register } = useAuth();
+  const [authScreen, setAuthScreen] = useState<'login' | 'register'>('login');
+  const [authError, setAuthError] = useState<string>('');
+
+  const handleLogin = async (username: string, password: string) => {
+    try {
+      setAuthError('');
+      await login(username, password);
+    } catch (err) {
+      setAuthError((err as Error).message);
+      throw err;
+    }
+  };
+
+  const handleRegister = async (
+    email: string,
+    username: string,
+    password: string,
+    displayName?: string
+  ) => {
+    try {
+      setAuthError('');
+      await register(email, username, password, displayName);
+    } catch (err) {
+      setAuthError((err as Error).message);
+      throw err;
+    }
+  };
+
+  if (authScreen === 'login') {
+    const { LoginScreen } = require('./screens/LoginScreen.js');
+    return (
+      <LoginScreen
+        onLogin={handleLogin}
+        onSwitchToRegister={() => {
+          setAuthError('');
+          setAuthScreen('register');
+        }}
+        error={authError}
+      />
+    );
+  }
+
+  const { RegisterScreen } = require('./screens/RegisterScreen.js');
+  return (
+    <RegisterScreen
+      onRegister={handleRegister}
+      onSwitchToLogin={() => {
+        setAuthError('');
+        setAuthScreen('login');
+      }}
+      error={authError}
+    />
+  );
+}
+
+interface GameAppProps {
+  user: any;
+  onLogout: () => Promise<void>;
+}
+
+function GameApp({ user, onLogout }: GameAppProps): React.ReactElement {
   const [logger] = useState(() => new ConsoleLogger('info'));
   const [controller] = useState(() => new GameController(logger));
   const [rewardSystem] = useState(() => new RewardSystem(logger));
@@ -265,6 +339,8 @@ export function App(): React.ReactElement {
           onSettings={handleOpenSettings}
           onExit={handleExit}
           hasSaves={hasSaves}
+          user={user}
+          onLogout={onLogout}
         />
       );
 
@@ -365,4 +441,12 @@ export function App(): React.ReactElement {
         </div>
       );
   }
+}
+
+export function App(): React.ReactElement {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
 }
