@@ -13,6 +13,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { MenuButton } from '../components/MenuButton.js';
+import { UserProfile } from '../components/UserProfile.js';
+import type { User } from '../types/auth.js';
 
 export interface MainMenuScreenProps {
   onNewGame: () => void;
@@ -21,6 +23,8 @@ export interface MainMenuScreenProps {
   onSettings: () => void;
   onExit: () => void;
   hasSaves: boolean;
+  user?: User | null;
+  onLogout?: () => void;
 }
 
 export function MainMenuScreen({
@@ -30,6 +34,8 @@ export function MainMenuScreen({
   onSettings,
   onExit,
   hasSaves,
+  user,
+  onLogout,
 }: MainMenuScreenProps): React.ReactElement {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -101,6 +107,13 @@ export function MainMenuScreen({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-900 via-purple-900 to-indigo-900 flex flex-col items-center justify-center p-8">
+      {/* User Profile - Top Right */}
+      {user && onLogout && (
+        <div className="absolute top-4 right-4">
+          <UserProfile user={user} onLogout={onLogout} compact />
+        </div>
+      )}
+
       {/* Title */}
       <div className="mb-16 text-center">
         <h1 className="text-7xl font-bold text-white mb-4 drop-shadow-2xl">
